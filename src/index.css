@@ -1,1 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
 @import 'tailwindcss';
+@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant blue (&:where(.blue, .blue *));
+@custom-variant blue-dark (&:where(.blue-dark, .blue-dark *));
+
+@theme {
+  --font-font: 'Montserrat', 'sans';
+  /* Background */
+  --color-bg: #fff;
+  --color-bg-dark: #09090b; /* 0a0a0a */ /*09090b*/
+
+  --color-scry-bg: #f7f6f6;
+  --color-scry-bg-dark: #101011; /*#18181a*/ /*101011*/
+
+  /* Standard Border */
+  --color-border: #dddddd;
+  --color-border-dark: #303030; /*#262626*/
+
+  --color-scry-border: #939393;
+  --color-scry-border-dark: #545454;
+
+  /* Geometry */
+  --radius-rounded: 16px;
+
+  /* Standard Hover */
+  --color-bg-hover: #d4d4d4;
+  --color-bg-hover-dark: #222222;
+
+  /* Text */
+  --color-text: #18181b;
+  --color-text-dark: #f0ede4;
+
+  --color-text-muted: #71717a;
+  --color-text-muted2: #9494aabe;
+
+  --color-text-error: #571e1e;
+  --color-text-error-dark: #ce5a5a;
+
+  /* Button */
+  --color-button-bg: #ececec;
+  --color-button-bg-dark: #181818;
+
+  --color-button-bg-hover: #dfdddd;
+  --color-button-bg-hover-dark: #252525;
+
+  --color-button-border: #dddddd;
+  --color-button-border-dark: #303030;
+
+  --color-button-border-hover: #c1c1c1;
+  --color-button-border-hover-dark: #3b3b3b;
+
+  --color-button-bg-error: #ffbebf;
+  --color-button-bg-error-dark: #9f071280;
+
+  --color-button-bg-error-hover: #ff9da2;
+  --color-button-bg-error-hover-dark: #9f0712b3;
+
+  --color-button-border-error: #fb2c36;
+  --color-button-border-error-dark: #fb2c36bf;
+
+  --color-button-border-error-hover: #e92c35;
+  --color-button-border-error-hover-dark: #fb2c36;
+
+  /* Input */
+  --color-input-bg: #ececec85;
+  --color-input-bg-dark: #18181880;
+
+  --color-input-bg-hover: #dfdddd81;
+  --color-input-bg-hover-dark: #25252579;
+
+  --color-input-border: #dddddd;
+  --color-input-border-dark: #303030;
+
+  --color-input-border-hover: #c1c1c1;
+  --color-input-border-hover-dark: #3b3b3b;
+
+  --color-input-bg-error: #ffbebf;
+  --color-input-bg-error-dark: #9f071280;
+
+  --color-input-bg-error-hover: #ff9da2;
+  --color-input-bg-error-hover-dark: #9f0712b3;
+
+  --color-input-border-error: #fb2c36;
+  --color-input-border-error-dark: #fb2c36bf;
+
+  --color-input-border-error-hover: #e92c35;
+  --color-input-border-error-hover-dark: #fb2c36;
+
+  /* Scrollbar */
+  --color-scrollbar-track: #eee;
+  --color-scrollbar-track-dark: #333;
+
+  --color-scrollbar-thumb: #ccc;
+  --color-scrollbar-thumb-dark: #555;
+}
+
+@layer base {
+  html,
+  body {
+    @apply select-none;
+    @apply antialiased;
+    @apply overflow-hidden;
+    @apply bg-transparent;
+  }
+  .drag-bar {
+    -webkit-app-region: drag;
+  }
+  ::-webkit-scrollbar {
+    @apply w-1;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-scrollbar-thumb;
+  }
+  .dark ::-webkit-scrollbar-thumb {
+    @apply bg-scrollbar-thumb-dark;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-scrollbar-track;
+  }
+  .dark ::-webkit-scrollbar-track {
+    @apply bg-scrollbar-track-dark;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
