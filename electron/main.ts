@@ -3,6 +3,7 @@ import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { settingsManager } from './settings/settingsManager'
+import { registerDatabaseHandlers } from './database/database'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -16,10 +17,11 @@ export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
 
 let tempWindow: BrowserWindow | null
+let configurationWindow: BrowserWindow | null
 let searchWindow: BrowserWindow | null
 let testingWindow: BrowserWindow | null
 
-function createWindow() {
+function createTempWindow() {
   if (tempWindow) {
     if (VITE_DEV_SERVER_URL) {
       tempWindow.loadURL(`${VITE_DEV_SERVER_URL}`)
@@ -40,6 +42,57 @@ function createWindow() {
   } else {
     // win.loadFile('dist/index.html')
     tempWindow.loadFile(path.join(RENDERER_DIST, 'index.html'))
+  }
+}
+
+function createConfigurationWindow() {
+  1
+  if (configurationWindow) {
+    if (VITE_DEV_SERVER_URL) {
+      configurationWindow.loadURL(`${VITE_DEV_SERVER_URL}configuration`)
+    } else {
+      configurationWindow.loadFile(path.join(RENDERER_DIST, 'configuration'))
+    }
+    return
+  }
+  configurationWindow = new BrowserWindow({
+    width: 720,
+    height: 480,
+    resizable: false,
+    autoHideMenuBar: true,
+    transparent: true,
+    center: true,
+    title: 'Bits | System Test',
+    frame: false,
+    vibrancy: 'under-window',
+    backgroundMaterial: 'acrylic',
+    visualEffectState: 'active',
+    titleBarStyle: 'hidden',
+    trafficLightPosition: { x: 12, y: 10 },
+
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.mjs'),
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: true
+    }
+  })
+
+  configurationWindow.on('closed', () => {
+    app.quit()
+  })
+
+  configurationWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url)
+    return { action: 'deny' }
+  })
+
+  settingsManager.registerWindow(configurationWindow)
+
+  if (VITE_DEV_SERVER_URL) {
+    configurationWindow.loadURL(`${VITE_DEV_SERVER_URL}configuration`)
+  } else {
+    configurationWindow.loadFile(path.join(RENDERER_DIST, 'configuration'))
   }
 }
 
@@ -102,12 +155,14 @@ app.on('window-all-closed', () => {
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow()
+    createTempWindow()
   }
 })
 
 app.whenReady().then(() => {
-  createWindow()
+  registerDatabaseHandlers()
+  createTempWindow()
+  createConfigurationWindow()
   globalShortcut.register('CommandOrControl+H', () => {
     createTestWindow()
     testingWindow?.focus()

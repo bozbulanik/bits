@@ -20,15 +20,9 @@ export interface UserSettings {
         timeZoneDisplay: boolean
       }
     }
-    // timezone: string
-    // dateFormat: string
-    // timeConvention: '12' | '24'
-    // weekStart: string
-    // calendar: string
   }
   theme: {
     mode: 'light' | 'dark' | 'system'
-    fontSize: 'small' | 'medium' | 'large'
     fontFamily: string
   }
   user: {

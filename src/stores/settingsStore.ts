@@ -1,12 +1,26 @@
 import { create } from 'zustand'
 import { UserSettings } from '../types/UserSettings'
 
+const setValueByPath = (obj: any, path: string, value: any): void => {
+  const keys = path.split('.')
+  const lastKey = keys.pop()!
+
+  const target = keys.reduce((acc, key) => {
+    if (acc[key] === undefined) {
+      acc[key] = {}
+    }
+    return acc[key]
+  }, obj)
+
+  target[lastKey] = value
+}
+
 interface SettingsStore {
   settings: UserSettings
   initialized: boolean
 
   initializeSettings: () => Promise<void>
-  setSetting: <K extends keyof UserSettings>(key: K, value: UserSettings[K]) => Promise<void>
+  setSetting: <T = any>(path: string, value: T) => Promise<void>
   resetSettings: () => Promise<void>
 }
 
@@ -41,7 +55,6 @@ export const useSettingsStore = create<SettingsStore>((set) => {
       },
       theme: {
         mode: 'dark',
-        fontSize: 'medium',
         fontFamily: 'Montserrat'
       },
       user: {
@@ -68,14 +81,16 @@ export const useSettingsStore = create<SettingsStore>((set) => {
       }
     },
 
-    setSetting: async (key, value) => {
+    setSetting: async <T = any>(path: string, value: T) => {
       try {
-        await window.ipcRenderer.invoke('setSettings', key, value)
-        set((state) => ({
-          settings: { ...state.settings, [key]: value }
-        }))
+        await window.ipcRenderer.invoke('setSettings', path, value)
+        set((state) => {
+          const newSettings = { ...state.settings }
+          setValueByPath(newSettings, path, value)
+          return { settings: newSettings }
+        })
       } catch (error) {
-        console.error(`Failed to update setting ${String(key)}:`, error)
+        console.error(`Failed to update setting at path ${path}:`, error)
       }
     },
 

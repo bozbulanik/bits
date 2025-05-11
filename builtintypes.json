@@ -1,0 +1,73 @@
+[{
+    "id": "builtinnote",
+    "origin": "builtin",
+    "name": "Note",
+    "iconName": "Notebook",
+    "properties": [
+      {
+        "id": "builtinnote-property-0",
+        "sortId": 0,
+        "name": "Title",
+        "type": "text",
+        "required": true,
+        "defaultValue": "Untitled"
+      },
+      {
+        "id": "builtinnote-property-1",
+        "sortId": 1,
+        "name": "Content",
+        "type": "text",
+        "required": true,
+        "defaultValue": ""
+      }
+    ]
+  },
+  {
+    "id": "contact",
+    "origin": "builtin",
+    "name": "Contact",
+    "iconName": "User",
+    "properties": [
+      {
+        "id": "contact-property-0",
+        "sortId": 0,
+        "name": "Name",
+        "type": "text",
+        "required": true,
+        "defaultValue": ""
+      },
+      {
+        "id": "contact-property-1",
+        "sortId": 1,
+        "name": "Email",
+        "type": "email",
+        "required": true,
+        "defaultValue": ""
+      },
+      {
+        "id": "contact-property-2",
+        "sortId": 2,
+        "name": "Phone",
+        "type": "phone",
+        "required": false,
+        "defaultValue": ""
+      },
+
+      {
+        "id": "contact-property-3",
+        "sortId": 3,
+        "name": "Birthday",
+        "type": "date",
+        "required": false,
+        "defaultValue": ""
+      },
+      {
+        "id": "contact-property-4",
+        "sortId": 4,
+        "name": "Is Favorite?",
+        "type": "checkbox",
+        "required": false,
+        "defaultValue": "false"
+      }
+    ]
+  }]

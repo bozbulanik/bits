@@ -34,7 +34,6 @@ export class SettingsManager {
         },
         theme: {
           mode: 'dark',
-          fontSize: 'medium',
           fontFamily: 'Montserrat'
         },
         user: {
@@ -65,14 +64,49 @@ export class SettingsManager {
     }
   }
 
-  getSetting<K extends keyof UserSettings>(key?: K): K extends keyof UserSettings ? UserSettings[K] : UserSettings {
-    return key ? (this.store.get(key) as any) : this.store.store
+  getSetting<T = any>(path?: string): T {
+    if (!path) {
+      return this.store.store as T
+    }
+    return this.getValueByPath(this.store.store, path) as T
   }
 
-  setSetting<K extends keyof UserSettings>(key: K, value: UserSettings[K]): void {
-    this.store.set(key, value)
+  setSetting<T = any>(path: string, value: T): void {
+    const settings = { ...this.store.store }
+    this.setValueByPath(settings, path, value)
+    this.store.set(settings)
     this.broadcastSettingsUpdate()
   }
+
+  private getValueByPath(obj: any, path: string): any {
+    const keys = path.split('.')
+    return keys.reduce((acc, key) => {
+      return acc !== undefined && acc !== null ? acc[key] : undefined
+    }, obj)
+  }
+
+  private setValueByPath(obj: any, path: string, value: any): void {
+    const keys = path.split('.')
+    const lastKey = keys.pop()!
+
+    const target = keys.reduce((acc, key) => {
+      if (acc[key] === undefined) {
+        acc[key] = {}
+      }
+      return acc[key]
+    }, obj)
+
+    target[lastKey] = value
+  }
+
+  // getSetting<K extends keyof UserSettings>(key?: K): K extends keyof UserSettings ? UserSettings[K] : UserSettings {
+  //   return key ? (this.store.get(key) as any) : this.store.store
+  // }
+
+  // setSetting<K extends keyof UserSettings>(key: K, value: UserSettings[K]): void {
+  //   this.store.set(key, value)
+  //   this.broadcastSettingsUpdate()
+  // }
 
   resetSettings(): void {
     this.store.clear()
