@@ -8,10 +8,17 @@ interface BitsStore {
   bits: Bit[]
   loadBits: () => Promise<void>
   addBit: (type: BitTypeDefinition, data: BitData[]) => Promise<void>
-  updateBit: (id: string, createdAt: string, updatedAt: string, pinned: number, data: BitData[]) => Promise<void>
+  updateBit: (
+    id: string,
+    createdAt: string,
+    updatedAt: string,
+    pinned: number,
+    data: BitData[]
+  ) => Promise<void>
   deleteBit: (id: string) => Promise<void>
+  searchBits: (query: string) => Bit[]
 }
-export const useBitsStore = create<BitsStore>((set) => ({
+export const useBitsStore = create<BitsStore>((set, get) => ({
   bits: [],
   isLoading: false,
   loadError: null,
@@ -83,7 +90,9 @@ export const useBitsStore = create<BitsStore>((set) => ({
   },
   updateBit: async (id, createdAt, updatedAt, pinned, data) => {
     set((state) => ({
-      bits: state.bits.map((type) => (type.id === id ? { ...type, createdAt, updatedAt, pinned, data } : type))
+      bits: state.bits.map((type) =>
+        type.id === id ? { ...type, createdAt, updatedAt, pinned, data } : type
+      )
     }))
     await window.ipcRenderer.invoke('updateBit', id, createdAt, updatedAt, pinned, data)
   },
@@ -92,5 +101,29 @@ export const useBitsStore = create<BitsStore>((set) => ({
       bits: state.bits.filter((type) => type.id !== id)
     }))
     await window.ipcRenderer.invoke('deleteBit', id)
+  },
+  searchBits: (query): Bit[] => {
+    const allBits = get().bits
+    return allBits.filter((bit) => recursiveSearch(bit, query.toLowerCase()))
   }
 }))
+
+const IGNORED_KEYS = ['id', 'type', 'createdAt', 'updatedAt', 'pinned']
+function recursiveSearch(obj: any, query: string): boolean {
+  if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
+    return obj.toString().toLowerCase().includes(query)
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.some((item) => recursiveSearch(item, query))
+  }
+
+  if (typeof obj === 'object' && obj !== null) {
+    return Object.entries(obj).some(([key, value]) => {
+      if (IGNORED_KEYS.includes(key)) return false
+      return recursiveSearch(value, query)
+    })
+  }
+
+  return false
+}

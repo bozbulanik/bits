@@ -5,19 +5,18 @@ export interface UserSettings {
     timeSystem: {
       calendarType: string
       week: {
-        startDay: string
-        weekendDays: string[]
-        length: number
+        startDay: string // GREGORIAN
+        weekendDays: string[] // GREGORIAN
       }
       dateFormat: {
-        type: string
-        delimiter: string
-        customPattern: string | null
+        type: string // GREGORIAN
+        delimiter: string // GREGORIAN
+        customPattern: string | null // GREGORIAN
       }
       timeFormat: {
-        convention: '12-hour' | '24-hour'
-        includeSeconds: boolean
-        timeZoneDisplay: boolean
+        convention: '12-hour' | '24-hour' // GREGORIAN
+        includeSeconds: boolean // GREGORIAN
+        timeZoneDisplay: boolean // GREGORIAN
       }
     }
   }

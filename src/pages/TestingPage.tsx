@@ -1,6 +1,12 @@
 import { useBitsStore } from '../stores/bitsStore'
 import { useBitTypesStore } from '../stores/bitTypesStore'
-import { Bit, BitData, BitTypeDefinition, BitTypePropertyDefinition, BitTypePropertyDefinitionType } from '../types/Bit'
+import {
+  Bit,
+  BitData,
+  BitTypeDefinition,
+  BitTypePropertyDefinition,
+  BitTypePropertyDefinitionType
+} from '../types/Bit'
 import { format } from 'date-fns'
 
 import {
@@ -114,38 +120,39 @@ const TestingPage = () => {
   const getPropertyIcon = (type: string) => {
     switch (type) {
       case 'bit':
-        return <Logs size={14} strokeWidth={1.5} />
+        return <Logs size={16} strokeWidth={1.5} />
       case 'text':
-        return <ALargeSmall size={14} strokeWidth={1.5} />
+        return <ALargeSmall size={16} strokeWidth={1.5} />
       case 'number':
-        return <Hash size={14} strokeWidth={1.5} />
+        return <Hash size={16} strokeWidth={1.5} />
       case 'select':
-        return <Parentheses size={14} strokeWidth={1.5} />
+        return <Parentheses size={16} strokeWidth={1.5} />
       case 'multiselect':
-        return <Brackets size={14} strokeWidth={1.5} />
+        return <Brackets size={16} strokeWidth={1.5} />
       case 'date':
-        return <Calendar1 size={14} strokeWidth={1.5} />
+        return <Calendar1 size={16} strokeWidth={1.5} />
       case 'file':
-        return <File size={14} strokeWidth={1.5} />
+        return <File size={16} strokeWidth={1.5} />
       case 'checkbox':
-        return <Check size={14} strokeWidth={1.5} />
+        return <Check size={16} strokeWidth={1.5} />
       case 'url':
-        return <Link2 size={14} strokeWidth={1.5} />
+        return <Link2 size={16} strokeWidth={1.5} />
       case 'email':
-        return <Mail size={14} strokeWidth={1.5} />
+        return <Mail size={16} strokeWidth={1.5} />
       case 'phone':
-        return <Phone size={14} strokeWidth={1.5} />
+        return <Phone size={16} strokeWidth={1.5} />
       case 'image':
-        return <Image size={14} strokeWidth={1.5} />
+        return <Image size={16} strokeWidth={1.5} />
       default:
-        return <Text size={14} strokeWidth={1.5} />
+        return <Text size={16} strokeWidth={1.5} />
     }
   }
 
   const [bitTypeName, setBitTypeName] = useState<string>('')
   const [bitTypeIconName, setBitTypeIconName] = useState<string>('')
   const [bitTypePropertyName, setBitTypePropertyName] = useState<string>('')
-  const [bitTypePropertyType, setBitTypePropertyType] = useState<BitTypePropertyDefinitionType>('text')
+  const [bitTypePropertyType, setBitTypePropertyType] =
+    useState<BitTypePropertyDefinitionType>('text')
   const [bitTypePropertyRequired, setBitTypePropertyRequired] = useState<boolean>(false)
   const [bitTypePropertyDV, setBitTypePropertyDV] = useState<string>('')
 
@@ -228,7 +235,9 @@ const TestingPage = () => {
             variant={'ghost'}
             type="number"
             placeholder="Enter..."
-            onChange={(e) => handleDataValueChange(prop, parseFloat(e.target.value) || prop.defaultValue)}
+            onChange={(e) =>
+              handleDataValueChange(prop, parseFloat(e.target.value) || prop.defaultValue)
+            }
             required={prop.required}
           />
         )
@@ -244,7 +253,7 @@ const TestingPage = () => {
             placeholder="Enter..."
             onChange={(e) => handleDataValueChange(prop, e.target.value || prop.defaultValue)}
             required={prop.required}
-            rightIcon={<Calendar1 size={14} strokeWidth={1.5} />}
+            rightIcon={<Calendar1 size={16} strokeWidth={1.5} />}
           />
         )
       case 'file' as BitTypePropertyDefinitionType:
@@ -314,9 +323,15 @@ const TestingPage = () => {
       <div>
         <Button
           variant={'icon'}
-          onClick={() => setSetting('theme.mode', settings.theme.mode == 'light' ? 'dark' : 'light')}
+          onClick={() =>
+            setSetting('theme.mode', settings.theme.mode == 'light' ? 'dark' : 'light')
+          }
         >
-          {settings.theme.mode == 'light' ? <Moon size={16} strokeWidth={1.5} /> : <Sun size={16} strokeWidth={1.5} />}
+          {settings.theme.mode == 'light' ? (
+            <Moon size={16} strokeWidth={1.5} />
+          ) : (
+            <Sun size={16} strokeWidth={1.5} />
+          )}
         </Button>
       </div>
       <div className="overflow-auto flex flex-col p-2 gap-2 flex-1">
@@ -371,16 +386,20 @@ const TestingPage = () => {
                 <div className="flex gap-2 items-center">
                   {(() => {
                     const Icon = getIconComponent(bit.type.iconName)
-                    return Icon ? <Icon size={14} strokeWidth={1.5} /> : null
+                    return Icon ? <Icon size={16} strokeWidth={1.5} /> : null
                   })()}
                   <p className="font-semibold">{bit.type.name}</p>
 
                   <div className="ml-auto flex gap-2">
                     <Button onClick={() => handlePinning(bit)} variant={'icon'}>
-                      {bit.pinned ? <PinOff size={14} strokeWidth={1.5} /> : <Pin size={14} strokeWidth={1.5} />}
+                      {bit.pinned ? (
+                        <PinOff size={16} strokeWidth={1.5} />
+                      ) : (
+                        <Pin size={16} strokeWidth={1.5} />
+                      )}
                     </Button>
                     <Button onClick={() => deleteBit(bit.id)} variant={'icon'}>
-                      <X size={14} strokeWidth={1.5} />
+                      <X size={16} strokeWidth={1.5} />
                     </Button>
                   </div>
                 </div>
@@ -457,11 +476,15 @@ const TestingPage = () => {
               <div className="flex gap-2 items-center">
                 {(() => {
                   const Icon = getIconComponent(bitType.iconName)
-                  return Icon ? <Icon size={14} strokeWidth={1.5} /> : null
+                  return Icon ? <Icon size={16} strokeWidth={1.5} /> : null
                 })()}
                 <p className="font-semibold">{bitType.name}</p>
-                <Button onClick={() => deleteBitType(bitType.id)} variant={'icon'} className="ml-auto">
-                  <X size={14} strokeWidth={1.5} />
+                <Button
+                  onClick={() => deleteBitType(bitType.id)}
+                  variant={'icon'}
+                  className="ml-auto"
+                >
+                  <X size={16} strokeWidth={1.5} />
                 </Button>
               </div>
               <div className="flex flex-col gap-2">
@@ -475,7 +498,9 @@ const TestingPage = () => {
                       {getPropertyIcon(prop.type)}
                       <p className="mr-auto font-medium"> {prop.name}</p>
                       <p className="text-text-muted text-sm"> {prop.defaultValue}</p>
-                      <p className="text-text-muted text-xs">{prop.required ? 'Not required' : 'Required'}</p>
+                      <p className="text-text-muted text-xs">
+                        {prop.required ? 'Not required' : 'Required'}
+                      </p>
                     </div>
                   </div>
                 ))}

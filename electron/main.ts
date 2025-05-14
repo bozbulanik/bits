@@ -1,9 +1,14 @@
-import { app, BrowserWindow, globalShortcut, shell } from 'electron'
+import { app, BrowserWindow, globalShortcut, ipcMain, protocol, shell } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { settingsManager } from './settings/settingsManager'
+import { shortcutsManager } from './database/shortcutsManager'
+
 import { registerDatabaseHandlers } from './database/database'
+import { fetchGoogleFonts } from './fonts/fontService'
+import dotenv from 'dotenv'
+dotenv.config()
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -14,10 +19,14 @@ export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
 export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
+process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
+  ? path.join(process.env.APP_ROOT, 'public')
+  : RENDERER_DIST
 
 let tempWindow: BrowserWindow | null
 let configurationWindow: BrowserWindow | null
+let settingsWindow: BrowserWindow | null
+
 let searchWindow: BrowserWindow | null
 let testingWindow: BrowserWindow | null
 
@@ -46,7 +55,6 @@ function createTempWindow() {
 }
 
 function createConfigurationWindow() {
-  1
   if (configurationWindow) {
     if (VITE_DEV_SERVER_URL) {
       configurationWindow.loadURL(`${VITE_DEV_SERVER_URL}configuration`)
@@ -93,6 +101,106 @@ function createConfigurationWindow() {
     configurationWindow.loadURL(`${VITE_DEV_SERVER_URL}configuration`)
   } else {
     configurationWindow.loadFile(path.join(RENDERER_DIST, 'configuration'))
+  }
+}
+
+function createSettingsWindow() {
+  if (settingsWindow) {
+    if (VITE_DEV_SERVER_URL) {
+      settingsWindow.loadURL(`${VITE_DEV_SERVER_URL}settings/general`)
+    } else {
+      settingsWindow.loadFile(path.join(RENDERER_DIST, 'settings/general'))
+    }
+    return
+  }
+  settingsWindow = new BrowserWindow({
+    width: 720,
+    height: 480,
+    resizable: false,
+    autoHideMenuBar: true,
+    transparent: true,
+    center: true,
+    title: 'Bits | Settings',
+    frame: false,
+    vibrancy: 'under-window',
+    backgroundMaterial: 'acrylic',
+    visualEffectState: 'active',
+    titleBarStyle: 'hidden',
+    trafficLightPosition: { x: 12, y: 10 },
+
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.mjs'),
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: true
+    }
+  })
+
+  settingsWindow.on('closed', () => {
+    settingsWindow = null
+  })
+
+  settingsWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url)
+    return { action: 'deny' }
+  })
+
+  settingsManager.registerWindow(settingsWindow)
+
+  if (VITE_DEV_SERVER_URL) {
+    settingsWindow.loadURL(`${VITE_DEV_SERVER_URL}settings/general`)
+  } else {
+    settingsWindow.loadFile(path.join(RENDERER_DIST, 'settings/general'))
+  }
+}
+
+function createSearchWindow() {
+  if (searchWindow) {
+    if (VITE_DEV_SERVER_URL) {
+      searchWindow.loadURL(`${VITE_DEV_SERVER_URL}search`)
+    } else {
+      searchWindow.loadFile(path.join(RENDERER_DIST, 'search'))
+    }
+    return
+  }
+  searchWindow = new BrowserWindow({
+    width: 720,
+    height: 480,
+    resizable: false,
+    autoHideMenuBar: true,
+    transparent: true,
+    center: true,
+    title: 'Bits | Search',
+    frame: false,
+    vibrancy: 'under-window',
+    backgroundMaterial: 'acrylic',
+    visualEffectState: 'active',
+    titleBarStyle: 'hidden',
+    trafficLightPosition: { x: 12, y: 10 },
+
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.mjs'),
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: true
+    }
+  })
+
+  searchWindow.on('closed', () => {
+    searchWindow = null
+  })
+
+  searchWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url)
+    return { action: 'deny' }
+  })
+
+  settingsManager.registerWindow(searchWindow)
+
+  if (VITE_DEV_SERVER_URL) {
+    searchWindow.loadURL(`${VITE_DEV_SERVER_URL}search`)
+  } else {
+    searchWindow.loadFile(path.join(RENDERER_DIST, 'search'))
   }
 }
 
@@ -161,10 +269,130 @@ app.on('activate', () => {
 
 app.whenReady().then(() => {
   registerDatabaseHandlers()
+  initializeShortcutDatabase()
+  registerShortcutActions()
+  registerShortcutHandlers()
+
+  protocol.registerFileProtocol('local-image', (request, callback) => {
+    const url = request.url.replace('local-image://', '')
+    const decodedPath = decodeURIComponent(url)
+    callback({ path: decodedPath })
+  })
+
   createTempWindow()
-  createConfigurationWindow()
-  globalShortcut.register('CommandOrControl+H', () => {
+  // createConfigurationWindow()
+
+  app.on('will-quit', () => {
+    shortcutsManager.cleanup()
+  })
+})
+
+function initializeShortcutDatabase() {
+  // This function would populate your database with default shortcuts if it's empty
+  // You could use the node-sqlite3 API directly here or use your existing database setup
+}
+
+function registerShortcutActions() {
+  shortcutsManager.registerActionHandler('open_system_test', () => {
     createTestWindow()
     testingWindow?.focus()
   })
+  shortcutsManager.registerActionHandler('open_settings', () => {
+    createSettingsWindow()
+    settingsWindow?.focus()
+  })
+  shortcutsManager.registerActionHandler('open_search', () => {
+    createSearchWindow()
+    searchWindow?.focus()
+  })
+
+  shortcutsManager.registerActionHandler('quit_app', () => {
+    app.quit()
+  })
+
+  shortcutsManager.applyShortcuts()
+}
+
+function registerShortcutHandlers() {
+  ipcMain.handle('getShortcuts', async () => {
+    try {
+      const mainShortcuts = await shortcutsManager.loadMainShortcuts()
+      const localShortcuts = await shortcutsManager.loadLocalShortcuts()
+      const shortcuts = [...mainShortcuts, ...localShortcuts]
+      return shortcuts
+    } catch (error) {
+      console.error('Error loading shortcuts:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('updateShortcut', async (_event, action, newKey) => {
+    try {
+      await shortcutsManager.updateShortcut(action, newKey)
+      return true
+    } catch (error) {
+      console.error(`Error updating shortcut ${action}:`, error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('resetShortcut', async (_event, action) => {
+    try {
+      await shortcutsManager.resetShortcut(action)
+      return true
+    } catch (error) {
+      console.error(`Error resetting shortcut ${action}:`, error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('resetShortcuts', async (_event, action) => {
+    try {
+      await shortcutsManager.resetShortcuts()
+      return true
+    } catch (error) {
+      console.error(`Error resetting shortcuts:`, error)
+      throw error
+    }
+  })
+}
+
+ipcMain.handle('openWindow', async (_, windowName) => {
+  switch (windowName) {
+    case 'search':
+      createSearchWindow()
+      searchWindow?.focus()
+      break
+    case 'settings':
+      createSettingsWindow()
+      settingsWindow?.focus()
+      break
+    default:
+      break
+  }
+})
+ipcMain.handle('closeWindow', async (_, windowName) => {
+  switch (windowName) {
+    case 'search':
+      searchWindow?.close()
+      break
+    case 'settings':
+      settingsWindow?.close()
+      break
+    default:
+      break
+  }
+})
+
+ipcMain.on('useProfileImage', (event, filePath) => {
+  event.reply('profileImageSet', `local-image://${encodeURIComponent(filePath)}`)
+})
+
+ipcMain.handle('fetchFonts', async () => {
+  try {
+    const fonts = await fetchGoogleFonts()
+    return { success: true, fonts }
+  } catch (err: any) {
+    return { success: false, error: err.message }
+  }
 })

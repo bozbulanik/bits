@@ -17,8 +17,7 @@ export class SettingsManager {
             calendarType: 'gregorian',
             week: {
               startDay: 'monday',
-              weekendDays: ['saturday', 'sunday'],
-              length: 7
+              weekendDays: ['saturday', 'sunday']
             },
             dateFormat: {
               type: 'yyyy-mm-dd',

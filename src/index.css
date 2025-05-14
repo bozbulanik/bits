@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap'); */
 
 @import 'tailwindcss';
 @custom-variant dark (&:where(.dark, .dark *));
@@ -6,7 +6,7 @@
 @custom-variant blue-dark (&:where(.blue-dark, .blue-dark *));
 
 @theme {
-  --font-font: 'Montserrat', 'sans';
+  /* --font-font: 'Montserrat', 'sans'; */
   /* Background */
   --color-bg: #fff;
   --color-bg-dark: #09090b; /* 0a0a0a */ /*09090b*/
