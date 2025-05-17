@@ -49,7 +49,7 @@ const Switch: React.FC<ToggleProps> = ({
             className={`h-5 w-5 border bg-input-bg dark:bg-input-bg-dark duration-200 ${
               checked
                 ? 'translate-x-7 rounded-md transition-all border-input-border-hover dark:border-input-border-hover-dark bg-input-bg-hover-dark/25 dark:bg-input-bg-hover/25'
-                : 'rounded-full border-input-border-hover dark:border-input-border-hover-dark'
+                : 'rounded-md border-input-border-hover dark:border-input-border-hover-dark'
             }`}
           ></span>
         </span>

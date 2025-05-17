@@ -35,6 +35,9 @@ import { FC, useState } from 'react'
 import Button from '../components/Button'
 import Input from '../components/Input'
 import { useSettingsStore } from '../stores/settingsStore'
+import Combobox from '../components/Combobox'
+import SegmentedControl from '../components/SegmentedControl'
+import NumberInput from '../components/NumberInput'
 
 const TestingPage = () => {
   const { settings, setSetting } = useSettingsStore()
@@ -231,14 +234,9 @@ const TestingPage = () => {
         )
       case 'number' as BitTypePropertyDefinitionType:
         return (
-          <Input
-            variant={'ghost'}
-            type="number"
-            placeholder="Enter..."
-            onChange={(e) =>
-              handleDataValueChange(prop, parseFloat(e.target.value) || prop.defaultValue)
-            }
-            required={prop.required}
+          <NumberInput
+            value={parseFloat(prop.defaultValue as string)}
+            onChange={(e) => handleDataValueChange(prop, e || prop.defaultValue)}
           />
         )
       case 'select' as BitTypePropertyDefinitionType:
@@ -253,7 +251,7 @@ const TestingPage = () => {
             placeholder="Enter..."
             onChange={(e) => handleDataValueChange(prop, e.target.value || prop.defaultValue)}
             required={prop.required}
-            rightIcon={<Calendar1 size={16} strokeWidth={1.5} />}
+            rightSection={<Calendar1 size={16} strokeWidth={1.5} />}
           />
         )
       case 'file' as BitTypePropertyDefinitionType:
@@ -270,7 +268,6 @@ const TestingPage = () => {
         return (
           <>
             <Input
-              variant={'checkbox'}
               type="checkbox"
               onChange={(e) => handleDataValueChange(prop, e.target.checked || prop.defaultValue)}
             />
@@ -318,9 +315,10 @@ const TestingPage = () => {
       updateBit(bit.id, bit.createdAt, new Date().toISOString(), 1, bit.data)
     }
   }
+
   return (
     <div className="w-full h-full flex gap-2">
-      <div>
+      <div className="p-2 flex flex-col gap-2">
         <Button
           variant={'icon'}
           onClick={() =>
@@ -333,6 +331,41 @@ const TestingPage = () => {
             <Sun size={16} strokeWidth={1.5} />
           )}
         </Button>
+        <div className="flex  p-2">
+          <NumberInput value={2} onChange={() => {}} />
+        </div>
+
+        {/* <div className="flex gap-2 items-center">
+          <NumberInput min={0} onChange={() => {}} value={2} />
+          <Input
+            placeholder="0.00"
+            leftSection={
+              <div className="p-1 zpx-2 text-text-muted">
+                <Icons.DollarSign size={14} strokeWidth={1.5} />
+              </div>
+            }
+            rightSection={
+              <Combobox
+                ghost
+                selectedValues={['usd']}
+                options={[{ options: [{ value: 'usd', label: 'USD' }] }]}
+                onChange={() => {}}
+              />
+            }
+          />
+          <SegmentedControl
+            selectedOptionValue={'12-hour'}
+            onChange={() => {}}
+            segments={[
+              { value: '12-hour', label: '12 Hour' },
+              { value: '24-hour', label: '24 Hour' }
+            ]}
+          />
+          <Button>Test</Button>
+          <Button variant={'icon'}>
+            <ALargeSmall size={16} strokeWidth={1.5} />
+          </Button>
+        </div> */}
       </div>
       <div className="overflow-auto flex flex-col p-2 gap-2 flex-1">
         <div>

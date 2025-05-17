@@ -19,7 +19,7 @@ interface SettingsStore {
   settings: UserSettings
   initialized: boolean
 
-  initializeSettings: () => Promise<void>
+  loadSettings: () => Promise<void>
   setSetting: <T = any>(path: string, value: T) => Promise<void>
   resetSettings: () => Promise<void>
 }
@@ -71,7 +71,7 @@ export const useSettingsStore = create<SettingsStore>((set) => {
     },
     initialized: false,
 
-    initializeSettings: async () => {
+    loadSettings: async () => {
       try {
         const settings = await window.ipcRenderer.invoke('getSettings')
         set({ settings, initialized: true })

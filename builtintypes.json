@@ -26,7 +26,7 @@
     "id": "contact",
     "origin": "builtin",
     "name": "Contact",
-    "iconName": "User",
+    "iconName": "ContactRound",
     "properties": [
       {
         "id": "contact-property-0",

@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
-import Button from '../../components/Button'
+import { useState } from 'react'
 import Combobox from '../../components/Combobox'
 import Input from '../../components/Input'
 import Switch from '../../components/Switch'
 import Checkbox from '../../components/Checkbox'
 import { useSettingsStore } from '../../stores/settingsStore'
+import SegmentedControl from '../../components/SegmentedControl'
 
 const SettingsGeneral = () => {
   const { settings, setSetting } = useSettingsStore()
@@ -40,8 +40,6 @@ const SettingsGeneral = () => {
     setCalendarOption(val)
     setSetting('locale.timeSystem.calendarType', val)
   }
-
-  const [checked, setChecked] = useState(false)
 
   // --- GREGORIAN ---
 
@@ -105,6 +103,10 @@ const SettingsGeneral = () => {
   const handleTimeConvention = (checked: boolean) => {
     setTimeConvention(checked ? '24-hour' : '12-hour')
     setSetting('locale.timeSystem.timeFormat.convention', checked ? '24-hour' : '12-hour')
+  }
+  const handleTimeConventionSecond = (value: string) => {
+    setTimeConvention(value)
+    setSetting('locale.timeSystem.timeFormat.convention', value)
   }
   const [includeSeconds, setIncludeSeconds] = useState<boolean>(
     settings.locale.timeSystem.timeFormat.includeSeconds
@@ -201,9 +203,12 @@ const SettingsGeneral = () => {
               <div className="flex items-center">
                 <div className="flex flex-col flex-1">
                   <p className="text-sm font-semibold">Delimiter</p>
-                  <p className="text-sm text-text-muted">Custom delimiter for the date</p>
+                  <p className="text-sm text-text-muted">
+                    Custom delimiter for the date. ISO codes will not be escaped.
+                  </p>
                 </div>
                 <Input
+                  spellCheck={false}
                   value={delimiter}
                   onChange={(e) => handleDelimiter(e.target.value)}
                   className="w-48 ml-auto"
@@ -219,6 +224,7 @@ const SettingsGeneral = () => {
                   </p>
                 </div>
                 <Input
+                  spellCheck={false}
                   value={customPattern as string}
                   onChange={(e) => handleCustomPattern(e.target.value)}
                   className="w-48 ml-auto"
@@ -233,13 +239,13 @@ const SettingsGeneral = () => {
                   <p className="text-sm font-semibold">Convention</p>
                   <p className="text-sm text-text-muted">12 hours or 24 hours</p>
                 </div>
-                <Switch
-                  reversed
-                  className="ml-auto"
-                  checked={timeConvention == '12-hour' ? false : true}
-                  onChange={handleTimeConvention}
-                  onText="24 Hours"
-                  offText="12 Hours"
+                <SegmentedControl
+                  selectedOptionValue={timeConvention}
+                  onChange={handleTimeConventionSecond}
+                  segments={[
+                    { value: '12-hour', label: '12 Hour' },
+                    { value: '24-hour', label: '24 Hour' }
+                  ]}
                 />
               </div>
               <div className="flex items-center">

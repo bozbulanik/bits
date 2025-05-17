@@ -6,19 +6,13 @@ import Button from '../../components/Button'
 
 const SettingsProfile = () => {
   const { settings, setSetting } = useSettingsStore()
-  useEffect(() => {
-    setProfileImagePath(settings.user.profileImage)
-    setName(settings.user.name)
-    setSurname(settings.user.surname)
-    setEmail(settings.user.email)
-    setBio(settings.user.bio)
-  }, [settings])
+
   const [profileImageHovered, setProfileImageHovered] = useState<boolean>(false)
-  const [profileImagePath, setProfileImagePath] = useState<string>('')
-  const [name, setName] = useState<string>('')
-  const [surname, setSurname] = useState<string>('')
-  const [email, setEmail] = useState<string>('')
-  const [bio, setBio] = useState<string>('')
+  const [profileImagePath, setProfileImagePath] = useState<string>(settings.user.profileImage)
+  const [name, setName] = useState<string>(settings.user.name)
+  const [surname, setSurname] = useState<string>(settings.user.surname)
+  const [email, setEmail] = useState<string>(settings.user.email)
+  const [bio, setBio] = useState<string>(settings.user.bio)
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
@@ -84,42 +78,44 @@ const SettingsProfile = () => {
                   src={profileImagePath}
                 />
               ) : (
-                <User size={48} strokeWidth={1} />
+                <User size={48} strokeWidth={1.5} />
               )}
               {profileImageHovered && (
                 <div
-                  className={`absolute top-0 left-0 w-full h-full flex items-center justify-center bg-button-bg dark:bg-button-bg-dark rounded-md  ${
+                  className={`absolute top-0 left-0 w-full h-full flex items-center justify-center rounded-md  ${
                     profileImagePath == ''
-                      ? 'opacity-100 text-text-muted'
-                      : 'opacity-75 text-text dark:text-text-dark'
+                      ? 'bg-button-bg dark:bg-button-bg-dark opacity-100 text-text-muted'
+                      : 'bg-button-bg dark:bg-button-bg-dark opacity-75 text-text dark:text-text-dark'
                   }`}
                 >
-                  <ImagePlus size={48} strokeWidth={1} />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
+                  {profileImagePath == '' ? (
+                    <>
+                      <ImagePlus size={48} strokeWidth={1.5} />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        ref={fileInputRef}
+                        className="hidden"
+                        onChange={handleFileChange}
+                      />
+                    </>
+                  ) : (
+                    <div
+                      onClick={handleProfileImageRemoval}
+                      className="text-red-500 w-full h-full flex items-center justify-center"
+                    >
+                      <Trash size={48} strokeWidth={1.5} />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-            {profileImagePath != '' && (
-              <Button
-                onClick={handleProfileImageRemoval}
-                className="w-full"
-                variant={'destructive'}
-              >
-                <Trash size={16} strokeWidth={1.5} />
-                Remove
-              </Button>
-            )}
           </div>
           <div className="flex flex-col flex-1 gap-2">
             <div className="flex items-center">
               <p className="text-sm font-semibold">Name</p>
               <Input
+                spellCheck={false}
                 value={name}
                 onChange={handleNameChange}
                 placeholder="John"
@@ -129,6 +125,7 @@ const SettingsProfile = () => {
             <div className="flex items-center">
               <p className="text-sm font-semibold">Last Name</p>
               <Input
+                spellCheck={false}
                 value={surname}
                 onChange={handleSurnameChange}
                 placeholder="Smith"
@@ -138,6 +135,7 @@ const SettingsProfile = () => {
             <div className="flex items-center">
               <p className="text-sm font-semibold">E-mail</p>
               <Input
+                spellCheck={false}
                 value={email}
                 onChange={handleMailChange}
                 placeholder="example@mail.com"
@@ -149,19 +147,17 @@ const SettingsProfile = () => {
       </div>
       <div className="flex flex-col gap-2 p-2">
         <p className="text-text-muted uppercase text-sm font-semibold">AI</p>
-        <div className="flex flex-col">
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-col">
-              <p className="font-semibold text-sm">Bio</p>
-              <p className="text-text-muted text-sm">Define how AI interacts with you.</p>
-            </div>
-            <textarea
-              value={bio}
-              onChange={handleBioChange}
-              placeholder="I am 25 years old linguist interested in programming."
-              className="placeholder:text-text-muted/75 w-full h-24 p-1 text-sm ml-auto resize-none focus:outline-none bg-input-bg dark:bg-input-bg-dark border border-input-border dark:border-input-border-dark hover:bg-input-bg-hover dark:hover:bg-input-bg-hover-dark hover:border-input-border-hover dark:hover:border-input-border-hover-dark rounded-md"
-            />
+        <div className="flex gap-2">
+          <div className="flex flex-col">
+            <p className="font-semibold text-sm">Bio</p>
+            <p className="text-text-muted text-sm">Define how AI interacts with you.</p>
           </div>
+          <textarea
+            value={bio}
+            onChange={handleBioChange}
+            placeholder="I am 25 years old linguist interested in programming."
+            className="placeholder:text-text-muted/75 w-full h-24 p-1 text-sm ml-auto resize-none focus:outline-none bg-input-bg dark:bg-input-bg-dark border border-input-border dark:border-input-border-dark hover:bg-input-bg-hover dark:hover:bg-input-bg-hover-dark hover:border-input-border-hover dark:hover:border-input-border-hover-dark rounded-md"
+          />
         </div>
       </div>
     </div>

@@ -98,15 +98,6 @@ export class SettingsManager {
     target[lastKey] = value
   }
 
-  // getSetting<K extends keyof UserSettings>(key?: K): K extends keyof UserSettings ? UserSettings[K] : UserSettings {
-  //   return key ? (this.store.get(key) as any) : this.store.store
-  // }
-
-  // setSetting<K extends keyof UserSettings>(key: K, value: UserSettings[K]): void {
-  //   this.store.set(key, value)
-  //   this.broadcastSettingsUpdate()
-  // }
-
   resetSettings(): void {
     this.store.clear()
     this.broadcastSettingsUpdate()

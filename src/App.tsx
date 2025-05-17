@@ -13,13 +13,17 @@ import { MessageCircleQuestion } from 'lucide-react'
 import ConfigurationInitial from './pages/configuration/ConfigurationInitial'
 import SettingsRouter from './pages/settings/SettingsRouter'
 import { useShortcutsStore } from './stores/shortcutsStore'
+import BitViewer from './pages/BitViewer'
+import CalendarRouter from './pages/calendar/CalendarRouter'
+import BitTypeManager from './pages/bittypemanager/BitTypeManager'
+import BitTypeCreate from './pages/bittypemanager/BitTypeCreate'
+import BitTypeEdit from './pages/bittypemanager/BitTypeEdit'
 
 function App() {
   const { isLoading: bitsLoading, loadError: bitsError } = useBitsStore()
   const { isLoading: typesLoading, loadError: typesError } = useBitTypesStore()
-  const { settings, initialized, initializeSettings } = useSettingsStore()
+  const { settings, initialized, loadSettings } = useSettingsStore()
   const { isLoading, error: shortcutsError, shortcuts, fetchShortcuts } = useShortcutsStore()
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -33,14 +37,13 @@ function App() {
   }, [])
   useEffect(() => {
     if (!initialized) {
-      initializeSettings()
+      loadSettings()
     }
-  }, [initialized, initializeSettings])
+  }, [initialized, loadSettings])
 
   useEffect(() => {
     if (initialized) {
       document.body.className = settings.theme.mode
-      console.log(settings)
     }
   }, [initialized, settings.theme.mode])
 
@@ -146,6 +149,38 @@ function App() {
           }
         />
         <Route
+          path="/bitviewer/:id"
+          element={
+            <RootLayout>
+              <BitViewer />
+            </RootLayout>
+          }
+        />
+        <Route
+          path="/bittypemanager"
+          element={
+            <RootLayout>
+              <BitTypeManager />
+            </RootLayout>
+          }
+        />
+        <Route
+          path="/bittypemanager/create"
+          element={
+            <RootLayout>
+              <BitTypeCreate />
+            </RootLayout>
+          }
+        />
+        <Route
+          path="/bittypemanager/edit/:typeId"
+          element={
+            <RootLayout>
+              <BitTypeEdit />
+            </RootLayout>
+          }
+        />
+        <Route
           path="/testing"
           element={
             <RootLayout>
@@ -158,6 +193,14 @@ function App() {
           element={
             <RootLayout>
               <SettingsRouter />
+            </RootLayout>
+          }
+        />
+        <Route
+          path="/calendar/*"
+          element={
+            <RootLayout>
+              <CalendarRouter />
             </RootLayout>
           }
         />

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import Combobox, { ComboboxOptionGroup } from '../../components/Combobox'
 import { useSettingsStore } from '../../stores/settingsStore'
+import { Tooltip } from '../../components/Tooltip'
+import Button from '../../components/Button'
 
 const SettingsAppearance = () => {
   const { settings, setSetting } = useSettingsStore()

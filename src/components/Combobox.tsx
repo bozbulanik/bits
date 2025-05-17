@@ -79,6 +79,7 @@ interface ComboboxProps {
   onChange: (value: string | string[]) => void
   placeholder?: string
   multiSelect?: boolean
+  ghost?: boolean
 }
 
 const Combobox: React.FC<ComboboxProps> = ({
@@ -89,7 +90,8 @@ const Combobox: React.FC<ComboboxProps> = ({
   className,
   onChange,
   placeholder,
-  multiSelect
+  multiSelect,
+  ghost
 }) => {
   const [focusedOption, setFocusedOption] = useState<ComboboxOption | null>()
   const [isItemListOpen, setItemListOpen] = useState<boolean>(false)
@@ -208,11 +210,11 @@ const Combobox: React.FC<ComboboxProps> = ({
     { value: 'default', icon: <ArrowDownUp size={16} strokeWidth={1.5} /> }
   ]
   return (
-    <div className={`relative inline-block  ${className}`}>
+    <div className={`relative inline-block ${className}`}>
       <Button
         onWheel={handleButtonScroll}
         ref={buttonRef}
-        variant={'default'}
+        variant={ghost ? 'ghost' : 'default'}
         className="w-full"
         onClick={() => setItemListOpen((prev) => !prev)}
       >
@@ -225,7 +227,7 @@ const Combobox: React.FC<ComboboxProps> = ({
             <p>Selected ({selectedOptions.length})</p>
           </div>
         ) : (
-          <div>
+          <div className="flex gap-2 items-center">
             {selectedOptions[0]?.icon && selectedOptions[0].icon}
             <span>{selectedOptions[0]?.label}</span>
           </div>

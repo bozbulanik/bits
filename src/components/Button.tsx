@@ -3,27 +3,29 @@ import { ComponentProps, forwardRef } from 'react'
 import { cn } from '../utils'
 
 const buttonVariants = cva(
-  'cursor-pointer rounded-md flex gap-2 items-center justify-center font-semibold p-1.5',
+  'focus:outline-none cursor-pointer rounded-md flex gap-2 items-center justify-center font-semibold',
   {
     variants: {
       variant: {
         default:
-          'bg-button-bg dark:bg-button-bg-dark border border-button-border dark:border-button-border-dark hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark hover:border-button-border-hover dark:hover:border-button-border-hover-dark',
-        icon: 'p-1 bg-button-bg dark:bg-button-bg-dark border border-button-border dark:border-button-border-dark hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark hover:border-button-border-hover dark:hover:border-button-border-hover-dark',
+          'p-1.5 h-8 bg-button-bg dark:bg-button-bg-dark border border-button-border dark:border-button-border-dark hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark hover:border-button-border-hover dark:hover:border-button-border-hover-dark',
+        icon: 'w-6.5 h-6.5 bg-button-bg dark:bg-button-bg-dark border border-button-border dark:border-button-border-dark hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark hover:border-button-border-hover dark:hover:border-button-border-hover-dark',
 
-        ghost: 'bg-transparent hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark',
-        iconGhost: 'p-1 bg-transparent hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark',
+        ghost:
+          'p-1.5 h-7 bg-transparent hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark',
+        iconGhost:
+          'w-6.5 h-6.5 bg-transparent hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark',
 
         destructive:
-          'bg-button-bg-error dark:bg-button-bg-error-dark hover:bg-button-bg-error-hover dark:hover:bg-button-bg-error-hover-dark border border-button-border-error dark:border-button-border-error-dark hover:border-button-border-error-hover dark:hover:border-button-border-error-hover-dark',
+          'p-1.5 h-8 bg-button-bg-error dark:bg-button-bg-error-dark hover:bg-button-bg-error-hover dark:hover:bg-button-bg-error-hover-dark border border-button-border-error dark:border-button-border-error-dark hover:border-button-border-error-hover dark:hover:border-button-border-error-hover-dark',
         iconDestructive:
-          'p-1 bg-button-bg-error dark:bg-button-bg-error-dark hover:bg-button-bg-error-hover dark:hover:bg-button-bg-error-hover-dark border border-button-border-error dark:border-button-border-error-dark hover:border-button-border-error-hover dark:hover:border-button-border-error-hover-dark',
+          'w-6.5 h-6.5 bg-button-bg-error dark:bg-button-bg-error-dark hover:bg-button-bg-error-hover dark:hover:bg-button-bg-error-hover-dark border border-button-border-error dark:border-button-border-error-dark hover:border-button-border-error-hover dark:hover:border-button-border-error-hover-dark',
         iconDestructiveGhost:
-          'text-text dark:text-text-dark hover:text-text-error dark:hover:text-text-error-dark p-1 bg-transparent hover:bg-button-bg-error-hover dark:hover:bg-button-bg-error-hover-dark',
+          'w-6.5 h-6.5 text-text dark:text-text-dark hover:text-text-error dark:hover:text-text-error-dark bg-transparent hover:bg-button-bg-error-hover dark:hover:bg-button-bg-error-hover-dark',
 
-        tab: 'bg-transparent border border-transparent hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark ',
+        tab: 'p-1.5 h-8 bg-transparent border border-transparent hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark ',
         selectedTab:
-          'bg-transparent border border-button-border dark:border-button-border-dark hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark hover:border-button-border-hover dark:hover:border-button-border-hover-dark'
+          'p-1.5 h-8 bg-transparent border border-button-border dark:border-button-border-dark hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark hover:border-button-border-hover dark:hover:border-button-border-hover-dark'
       },
       size: {
         xs: 'text-xs',

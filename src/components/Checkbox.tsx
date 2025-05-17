@@ -12,7 +12,7 @@ const Checkbox: React.FC<CheckboxProps> = ({ label, checked, onChange, className
   return (
     <label className={`flex gap-2 items-center cursor-pointer ${className}`}>
       <div
-        className="p-0.5
+        className="h-6 w-6
           rounded-md border border-input-border dark:border-input-border-dark
           bg-input-bg dark:bg-input-bg-dark hover:bg-input-bg-hover dark:hover:bg-input-bg-hover-dark
           hover:border-input-border-hover dark:hover:border-input-border-hover-dark

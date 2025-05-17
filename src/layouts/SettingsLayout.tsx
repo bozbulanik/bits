@@ -12,7 +12,9 @@ const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children, currentPage }
   return (
     <div className="w-full h-full flex flex-col">
       <div className="h-12 flex items-center p-2">
-        <p className="ml-1 font-semibold w-full h-full content-center drag-bar">Settings</p>
+        <div className="flex-1 h-full flex items-center drag-bar">
+          <p className="ml-1 font-semibold">Settings</p>
+        </div>
         <Button
           onClick={() => window.ipcRenderer.invoke('closeWindow', 'settings')}
           variant={'icon'}
@@ -61,6 +63,9 @@ const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children, currentPage }
         </Button>
       </div>
       <div className="flex-1 min-h-0">{children}</div>
+      {currentPage != 'about' && (
+        <div className="p-2 h-12 mt-auto border-t border-border dark:border-border-dark"></div>
+      )}
     </div>
   )
 }
