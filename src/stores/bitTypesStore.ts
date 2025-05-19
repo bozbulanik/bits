@@ -1,6 +1,5 @@
 import { create } from 'zustand'
-import { BitTypeDefinition, BitTypePropertyDefinition } from '../types/Bit'
-import { useBitsStore } from './bitsStore'
+import { BitTypeAnalytics, BitTypeDefinition, BitTypePropertyDefinition } from '../types/Bit'
 
 interface BitTypesStore {
   isLoading: boolean
@@ -18,54 +17,18 @@ interface BitTypesStore {
     iconName: string,
     properties: BitTypePropertyDefinition[]
   ) => Promise<void>
+  reorderBitTypeProperties: (typeId: string, propertyIds: string[]) => Promise<void>
   deleteBitType: (id: string) => Promise<void>
   getBitTypeById: (id: string) => BitTypeDefinition | undefined
 }
 
 export const useBitTypesStore = create<BitTypesStore>((set, get) => {
   if (typeof window !== 'undefined' && window.ipcRenderer) {
-    window.ipcRenderer.on('bittypes-updated', async (_, updatedBitTypes) => {
-      set({ isLoading: true, loadError: null })
-      try {
-        const parsedBitTypeRows = await Promise.all(
-          updatedBitTypes.map(async (bitType: any) => {
-            const bit_type_properties = await window.ipcRenderer.invoke(
-              'getBitTypePropertiesById',
-              bitType.id
-            )
-            if (!bit_type_properties || bit_type_properties.length === 0) {
-              console.warn(`Unknown property data for bit type id ${bitType.id}`)
-              return null
-            }
-
-            const properties = bit_type_properties.map(
-              (data: any) =>
-                ({
-                  id: data.id,
-                  sortId: data.sort_id,
-                  name: data.name,
-                  type: data.type,
-                  required: data.required,
-                  defaultValue: data.default_value
-                } as BitTypePropertyDefinition)
-            )
-            return {
-              id: bitType.id,
-              origin: bitType.origin,
-              name: bitType.name,
-              iconName: bitType.icon_name,
-              occurrenceType: bitType.occurrence_type,
-              properties
-            } as BitTypeDefinition
-          })
-        )
-        set({ bitTypes: [...parsedBitTypeRows], isLoading: false })
-      } catch (err) {
-        console.log('Failed to fetch bit types', err)
-        set({ loadError: err as Error, isLoading: false })
-      }
+    window.ipcRenderer.on('bittypes-updated', (_, structuredBitTypes) => {
+      set({ bitTypes: structuredBitTypes, isLoading: false })
     })
   }
+
   return {
     bitTypes: [],
     isLoading: false,
@@ -73,85 +36,133 @@ export const useBitTypesStore = create<BitTypesStore>((set, get) => {
     loadBitTypes: async () => {
       set({ isLoading: true, loadError: null })
       try {
-        const bitTypeRows = await window.ipcRenderer.invoke('getBitTypes')
-        const parsedBitTypeRows = await Promise.all(
-          bitTypeRows.map(async (bitType: any) => {
-            const bit_type_properties = await window.ipcRenderer.invoke(
-              'getBitTypePropertiesById',
-              bitType.id
-            )
-            if (!bit_type_properties || bit_type_properties.length === 0) {
-              console.warn(`Unknown property data for bit type id ${bitType.id}`)
-              return null
-            }
-
-            const properties = bit_type_properties.map(
-              (data: any) =>
-                ({
-                  id: data.id,
-                  sortId: data.sort_id,
-                  name: data.name,
-                  type: data.type,
-                  required: data.required,
-                  defaultValue: data.default_value
-                } as BitTypePropertyDefinition)
-            )
-            return {
-              id: bitType.id,
-              origin: bitType.origin,
-              name: bitType.name,
-              iconName: bitType.icon_name,
-              properties
-            } as BitTypeDefinition
-          })
-        )
-        set({ bitTypes: [...parsedBitTypeRows], isLoading: false })
+        const structuredBitTypes = await window.ipcRenderer.invoke('getStructuredBitTypes')
+        set({ bitTypes: structuredBitTypes, isLoading: false })
       } catch (err) {
-        console.log('Failed to fetch bit types', err)
+        console.error('Failed to fetch bit types', err)
         set({ loadError: err as Error, isLoading: false })
       }
     },
+
     addBitType: async (name, iconName, properties) => {
+      const id = crypto.randomUUID()
+
+      // Add order property to each property
+      const propertiesWithOrder = properties.map((prop, index) => ({
+        ...prop,
+        order: index
+      }))
+
       const newBitType: BitTypeDefinition = {
-        id: crypto.randomUUID(),
+        id,
         origin: 'user',
         name,
         iconName,
-        properties
+        properties: propertiesWithOrder
       }
+
       set((state) => ({ bitTypes: [...state.bitTypes, newBitType] }))
-      await window.ipcRenderer.invoke(
-        'addBitType',
-        newBitType.id,
-        newBitType.name,
-        newBitType.iconName,
-        newBitType.properties
-      )
+
+      try {
+        await window.ipcRenderer.invoke('addBitType', id, name, iconName, propertiesWithOrder)
+      } catch (error) {
+        console.error('Failed to add bit type:', error)
+        set((state) => ({
+          bitTypes: state.bitTypes.filter((type) => type.id !== id),
+          loadError: error as Error
+        }))
+      }
     },
+
     updateBitType: async (id, name, iconName, properties) => {
+      const previousBitTypes = get().bitTypes
+
       set((state) => ({
         bitTypes: state.bitTypes.map((type) =>
           type.id === id ? { ...type, name, iconName, properties } : type
         )
       }))
-      await window.ipcRenderer.invoke('updateBitType', id, name, iconName, properties)
+
+      try {
+        await window.ipcRenderer.invoke('updateBitType', id, name, iconName, properties)
+      } catch (error) {
+        console.error('Failed to update bit type:', error)
+        set({
+          bitTypes: previousBitTypes,
+          loadError: error as Error
+        })
+      }
     },
+
+    reorderBitTypeProperties: async (typeId, propertyIds) => {
+      const { bitTypes } = get()
+      const bitType = bitTypes.find((type) => type.id === typeId)
+
+      if (!bitType) {
+        console.error(`BitType with id ${typeId} not found`)
+        return
+      }
+
+      // Create a map of property id to property
+      const propertyMap = Object.fromEntries(bitType.properties.map((prop) => [prop.id, prop]))
+
+      // Create properties array with new order
+      const reorderedProperties = propertyIds.map((id, index) => ({
+        ...propertyMap[id],
+        order: index
+      }))
+
+      // Update bitType with reordered properties
+      const updatedBitType = {
+        ...bitType,
+        properties: reorderedProperties
+      }
+
+      // Update state
+      set((state) => ({
+        bitTypes: state.bitTypes.map((type) => (type.id === typeId ? updatedBitType : type))
+      }))
+
+      // Send to backend
+      try {
+        await window.ipcRenderer.invoke(
+          'updateBitType',
+          typeId,
+          updatedBitType.name,
+          updatedBitType.iconName,
+          reorderedProperties
+        )
+      } catch (error) {
+        console.error('Failed to reorder properties:', error)
+        // Revert to previous state
+        set((state) => ({
+          bitTypes: state.bitTypes.map((type) => (type.id === typeId ? bitType : type)),
+          loadError: error as Error
+        }))
+      }
+    },
+
     deleteBitType: async (id) => {
+      const previousBitTypes = get().bitTypes
+
       set((state) => ({
         bitTypes: state.bitTypes.filter((type) => type.id !== id)
       }))
-      // Delete the bits as well.
-      const currentBits = useBitsStore.getState().bits
-      const deleteBit = useBitsStore.getState().deleteBit
-      const bits = currentBits.filter((t) => t.type.id === id)
-      bits.map((bit) => {
-        deleteBit(bit.id)
-      })
-      await window.ipcRenderer.invoke('deleteBitType', id)
+
+      try {
+        await window.ipcRenderer.invoke('deleteBitType', id)
+      } catch (error) {
+        console.error('Failed to delete bit type:', error)
+        set({
+          bitTypes: previousBitTypes,
+          loadError: error as Error
+        })
+      }
     },
+
     getBitTypeById: (id) => {
       const { bitTypes } = get()
-      return bitTypes.find((type: BitTypeDefinition) => type.id === id)
+      return bitTypes.find((type) => type.id === id)
     }
   }
 })

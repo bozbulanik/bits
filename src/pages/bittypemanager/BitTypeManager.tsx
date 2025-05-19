@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Plus, StickyNote, Trash, X } from 'lucide-react'
+import { ChevronDown, ChevronRight, Plus, Trash, X } from 'lucide-react'
 import Button from '../../components/Button'
 import { useBitTypesStore } from '../../stores/bitTypesStore'
 import { BitTypeDefinition } from '../../types/Bit'
@@ -128,27 +128,25 @@ const BitTypeManager = () => {
                       }}
                       className="overflow-hidden flex flex-col text-sm divide-y divide-border/75 dark:divide-border-dark/75"
                     >
-                      {[...bitType.properties]
-                        .sort((a, b) => a.sortId - b.sortId)
-                        .map((prop) => (
-                          <div
-                            key={prop.id}
-                            className="flex items-center divide-x divide-border/75 dark:divide-border-dark/75"
-                          >
-                            <span className="p-1 text-text-muted">
-                              {getPropertyIcon(prop.type)}
+                      {bitType.properties.map((prop) => (
+                        <div
+                          key={prop.id}
+                          className="flex items-center divide-x divide-border/75 dark:divide-border-dark/75"
+                        >
+                          <span className="p-1 text-text-muted">{getPropertyIcon(prop.type)}</span>
+                          <div className="flex w-full justify-between items-center divide-x divide-border/75 dark:divide-border-dark/75">
+                            <span className="w-1/3 p-1 px-2 text-text-muted truncate">
+                              {prop.name}
                             </span>
-                            <div className="flex w-full justify-between items-center divide-x divide-border/75 dark:divide-border-dark/75">
-                              <span className="w-1/3 p-1 px-2 text-text-muted">{prop.name}</span>
-                              <span className="w-1/3 p-1 px-2 text-text-muted">
-                                {prop.defaultValue ? prop.defaultValue : 'No default value'}
-                              </span>
-                              <span className="w-1/3 p-1 px-2 text-text-muted">
-                                {prop.required ? 'Required' : 'Not required'}
-                              </span>
-                            </div>
+                            <span className="w-1/3 p-1 px-2 text-text-muted truncate">
+                              {prop.defaultValue ? prop.defaultValue : 'No default value'}
+                            </span>
+                            <span className="w-1/3 p-1 px-2 text-text-muted">
+                              {prop.required ? 'Required' : 'Not required'}
+                            </span>
                           </div>
-                        ))}
+                        </div>
+                      ))}
                     </motion.div>
                   )}
                 </AnimatePresence>

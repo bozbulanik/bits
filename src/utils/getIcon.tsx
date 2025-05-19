@@ -25,30 +25,30 @@ export function getIconComponent(name: string): FC<{ size?: number; strokeWidth?
 export const getPropertyIcon = (type: string) => {
   switch (type) {
     case 'bit':
-      return <Logs size={14} strokeWidth={1.5} />
+      return <Logs size={16} strokeWidth={1.5} />
     case 'text':
-      return <ALargeSmall size={14} strokeWidth={1.5} />
+      return <ALargeSmall size={16} strokeWidth={1.5} />
     case 'number':
-      return <Hash size={14} strokeWidth={1.5} />
+      return <Hash size={16} strokeWidth={1.5} />
     case 'select':
-      return <Parentheses size={14} strokeWidth={1.5} />
+      return <Parentheses size={16} strokeWidth={1.5} />
     case 'multiselect':
-      return <Brackets size={14} strokeWidth={1.5} />
+      return <Brackets size={16} strokeWidth={1.5} />
     case 'date':
-      return <Calendar1 size={14} strokeWidth={1.5} />
+      return <Calendar1 size={16} strokeWidth={1.5} />
     case 'file':
-      return <File size={14} strokeWidth={1.5} />
+      return <File size={16} strokeWidth={1.5} />
     case 'checkbox':
-      return <Check size={14} strokeWidth={1.5} />
+      return <Check size={16} strokeWidth={1.5} />
     case 'url':
-      return <Link2 size={14} strokeWidth={1.5} />
+      return <Link2 size={16} strokeWidth={1.5} />
     case 'email':
-      return <Mail size={14} strokeWidth={1.5} />
+      return <Mail size={16} strokeWidth={1.5} />
     case 'phone':
-      return <Phone size={14} strokeWidth={1.5} />
+      return <Phone size={16} strokeWidth={1.5} />
     case 'image':
-      return <Image size={14} strokeWidth={1.5} />
+      return <Image size={16} strokeWidth={1.5} />
     default:
-      return <Text size={14} strokeWidth={1.5} />
+      return <Text size={16} strokeWidth={1.5} />
   }
 }

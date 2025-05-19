@@ -9,7 +9,8 @@ const inputVariants = cva(
       variant: {
         default: 'placeholder:text-text-input-placeholder',
         ghost: 'placeholder:text-text-input-placeholder',
-        error: 'placeholder:text-text-error dark:placeholder:text-text-error-dark'
+        error: 'placeholder:text-text-error dark:placeholder:text-text-error-dark',
+        ghostError: 'placeholder:text-text-error dark:placeholder:text-text-error-dark'
       },
       inputSize: {
         xs: 'text-xs',
@@ -36,7 +37,9 @@ const wrapperVariants = cva('flex items-center rounded-md', {
         'h-8 bg-input-bg dark:bg-input-bg-dark border border-input-border dark:border-input-border-dark hover:bg-input-bg-hover dark:hover:bg-input-bg-hover-dark hover:border-input-border-hover dark:hover:border-input-border-hover-dark',
       ghost: '',
       error:
-        'placeholder:text-white bg-input-bg dark:bg-input-bg-dark hover:bg-input-bg-error-hover dark:hover:bg-input-bg-error-hover-dark border border-input-border-error dark:border-input-border-error-dark hover:border-input-border-error-hover dark:hover:border-input-border-error-hover-dark'
+        'placeholder:text-white bg-input-bg dark:bg-input-bg-dark hover:bg-input-bg-error-hover dark:hover:bg-input-bg-error-hover-dark border border-input-border-error dark:border-input-border-error-dark hover:border-input-border-error-hover dark:hover:border-input-border-error-hover-dark',
+      ghostError:
+        'placeholder:text-white bg-input-bg-error dark:bg-input-bg-error-dark hover:bg-input-bg-error-hover dark:hover:bg-input-bg-error-hover-dark'
     },
     inputSize: {
       xs: 'text-xs',

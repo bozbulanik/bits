@@ -41,6 +41,8 @@
   --color-text-error: #571e1e;
   --color-text-error-dark: #ce5a5a;
 
+  --color-text-success: #20571e;
+  --color-text-success-dark: #5ece5a;
   /* Button */
   --color-button-bg: #ececec;
   --color-button-bg-dark: #181818;
@@ -137,5 +139,13 @@
 
   .number-input input[type='number'] {
     -moz-appearance: textfield;
+  }
+
+  .recharts-wrapper *:focus {
+    outline: none;
+  }
+
+  .recharts-wrapper *:focus-visible {
+    outline: 2px solid #4f46e5; /* Optional: retain visible focus ring for keyboard users */
   }
 }

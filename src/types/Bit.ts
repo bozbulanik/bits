@@ -8,6 +8,7 @@ export interface Bit {
 }
 
 export interface BitData {
+  id: string // Unique bit data id
   propertyId: string // ID of the linked property
   value: any // Value of the data
 }
@@ -22,11 +23,11 @@ export interface BitTypeDefinition {
 
 export interface BitTypePropertyDefinition {
   id: string // Unique ID for the property
-  sortId: number // Local ID relative to Bit Type
   name: string // Name of the bit type property
   type: BitTypePropertyDefinitionType // Type of the bit type property
   required?: boolean // Is it required?
-  defaultValue?: string // Default value for the bit type property
+  defaultValue?: string | number | boolean | string[] // Default value for the bit type property
+  order: number
 }
 
 export type BitTypePropertyDefinitionType = //Data type

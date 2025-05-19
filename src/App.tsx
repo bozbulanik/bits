@@ -18,6 +18,7 @@ import CalendarRouter from './pages/calendar/CalendarRouter'
 import BitTypeManager from './pages/bittypemanager/BitTypeManager'
 import BitTypeCreate from './pages/bittypemanager/BitTypeCreate'
 import BitTypeEdit from './pages/bittypemanager/BitTypeEdit'
+import AnalyticsPage from './pages/AnalyticsPage'
 
 function App() {
   const { isLoading: bitsLoading, loadError: bitsError } = useBitsStore()
@@ -201,6 +202,14 @@ function App() {
           element={
             <RootLayout>
               <CalendarRouter />
+            </RootLayout>
+          }
+        />
+        <Route
+          path="/analytics"
+          element={
+            <RootLayout>
+              <AnalyticsPage />
             </RootLayout>
           }
         />

@@ -38,6 +38,7 @@ import { useSettingsStore } from '../stores/settingsStore'
 import Combobox from '../components/Combobox'
 import SegmentedControl from '../components/SegmentedControl'
 import NumberInput from '../components/NumberInput'
+import Checkbox from '../components/Checkbox'
 
 const TestingPage = () => {
   const { settings, setSetting } = useSettingsStore()
@@ -168,7 +169,6 @@ const TestingPage = () => {
     const length = currentProperties.length
     const newBitTypePropertyDefinition: BitTypePropertyDefinition = {
       id: crypto.randomUUID(),
-      sortId: length,
       name: bitTypePropertyName,
       type: bitTypePropertyType,
       required: bitTypePropertyRequired,
@@ -197,6 +197,7 @@ const TestingPage = () => {
       const existingItemIndex = prevData.findIndex((item) => item.propertyId === prop.id)
 
       const newItem: BitData = {
+        id: crypto.randomUUID(),
         propertyId: prop.id,
         value
       }
@@ -334,38 +335,6 @@ const TestingPage = () => {
         <div className="flex  p-2">
           <NumberInput value={2} onChange={() => {}} />
         </div>
-
-        {/* <div className="flex gap-2 items-center">
-          <NumberInput min={0} onChange={() => {}} value={2} />
-          <Input
-            placeholder="0.00"
-            leftSection={
-              <div className="p-1 zpx-2 text-text-muted">
-                <Icons.DollarSign size={14} strokeWidth={1.5} />
-              </div>
-            }
-            rightSection={
-              <Combobox
-                ghost
-                selectedValues={['usd']}
-                options={[{ options: [{ value: 'usd', label: 'USD' }] }]}
-                onChange={() => {}}
-              />
-            }
-          />
-          <SegmentedControl
-            selectedOptionValue={'12-hour'}
-            onChange={() => {}}
-            segments={[
-              { value: '12-hour', label: '12 Hour' },
-              { value: '24-hour', label: '24 Hour' }
-            ]}
-          />
-          <Button>Test</Button>
-          <Button variant={'icon'}>
-            <ALargeSmall size={16} strokeWidth={1.5} />
-          </Button>
-        </div> */}
       </div>
       <div className="overflow-auto flex flex-col p-2 gap-2 flex-1">
         <div>
@@ -401,12 +370,6 @@ const TestingPage = () => {
                 Add bit
               </Button>
             </div>
-            {/* <Button
-              className="border border-border dark:border-border-dark  rounded-md p-1 cursor-pointer bg-component hover:bg-component-hover"
-              onClick={handleAddBit}
-            >
-              Add Bit
-            </Button> */}
           </div>
         </div>
         <div className="flex flex-col gap-2 overflow-auto">
@@ -472,11 +435,10 @@ const TestingPage = () => {
             </select>
             <div className="flex gap-2 items-center">
               <label>Required</label>
-              <Input
-                variant={'checkbox'}
+
+              <Checkbox
                 checked={bitTypePropertyRequired}
-                onChange={(e) => setBitTypePropertyRequired(e.target.checked)}
-                type="checkbox"
+                onChange={(e) => setBitTypePropertyRequired(e)}
               />
             </div>
             <Input
@@ -527,7 +489,6 @@ const TestingPage = () => {
                     className="px-2 border border-border dark:border-border-dark bg-bg-hover/50 dark:bg-bg-hover-dark/50 rounded-md "
                   >
                     <div className="flex gap-2 items-center justify-between">
-                      <p className="text-text-muted text-xs">#{prop.sortId}</p>
                       {getPropertyIcon(prop.type)}
                       <p className="mr-auto font-medium"> {prop.name}</p>
                       <p className="text-text-muted text-sm"> {prop.defaultValue}</p>

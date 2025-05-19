@@ -31,6 +31,7 @@ let searchWindow: BrowserWindow | null
 let bitViewerWindow: BrowserWindow | null
 let bitTypeManagerWindow: BrowserWindow | null
 let calendarWindow: BrowserWindow | null
+let analyticsWindow: BrowserWindow | null
 let testingWindow: BrowserWindow | null
 
 function createTempWindow() {
@@ -271,7 +272,7 @@ function createBitTypeManagerWindow() {
     return
   }
   bitTypeManagerWindow = new BrowserWindow({
-    width: 480,
+    width: 720,
     height: 720,
     resizable: false,
     autoHideMenuBar: true,
@@ -365,6 +366,56 @@ function createCalendarWindow() {
   }
 }
 
+function createAnalyticsWindow() {
+  if (analyticsWindow) {
+    if (VITE_DEV_SERVER_URL) {
+      analyticsWindow.loadURL(`${VITE_DEV_SERVER_URL}analytics`)
+    } else {
+      analyticsWindow.loadFile(path.join(RENDERER_DIST, `analytics`))
+    }
+    return
+  }
+  analyticsWindow = new BrowserWindow({
+    width: 1280,
+    height: 960,
+    resizable: false,
+    autoHideMenuBar: true,
+    transparent: true,
+    center: true,
+    title: 'Bits | Analytics',
+    frame: false,
+    vibrancy: 'under-window',
+    backgroundMaterial: 'acrylic',
+    visualEffectState: 'active',
+    titleBarStyle: 'hidden',
+    trafficLightPosition: { x: 12, y: 10 },
+
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.mjs'),
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: true
+    }
+  })
+
+  analyticsWindow.on('closed', () => {
+    analyticsWindow = null
+  })
+
+  analyticsWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url)
+    return { action: 'deny' }
+  })
+
+  settingsManager.registerWindow(analyticsWindow)
+  bitDatabaseManager.registerWindow(analyticsWindow)
+
+  if (VITE_DEV_SERVER_URL) {
+    analyticsWindow.loadURL(`${VITE_DEV_SERVER_URL}analytics`)
+  } else {
+    analyticsWindow.loadFile(path.join(RENDERER_DIST, `analytics`))
+  }
+}
 function createTestWindow() {
   if (testingWindow) {
     if (VITE_DEV_SERVER_URL) {
@@ -473,6 +524,10 @@ function registerShortcutActions() {
     createCalendarWindow()
     calendarWindow?.focus()
   })
+  shortcutsManager.registerActionHandler('open_analytics', () => {
+    createAnalyticsWindow()
+    analyticsWindow?.focus()
+  })
 
   shortcutsManager.registerActionHandler('quit_app', () => {
     app.quit()
@@ -543,6 +598,10 @@ ipcMain.handle('openWindow', async (_, windowName) => {
       createCalendarWindow()
       calendarWindow?.focus()
       break
+    case 'analytics':
+      createAnalyticsWindow()
+      analyticsWindow?.focus()
+      break
     default:
       break
   }
@@ -563,6 +622,9 @@ ipcMain.handle('closeWindow', async (_, windowName) => {
       break
     case 'calendar':
       calendarWindow?.close()
+      break
+    case 'analytics':
+      analyticsWindow?.close()
       break
     default:
       break

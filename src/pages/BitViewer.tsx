@@ -69,11 +69,9 @@ const BitViewer = () => {
     }
   }
   function renderBitData(bit: Bit) {
-    const sortedProperties = [...bit.type.properties].sort((a, b) => a.sortId - b.sortId)
-
     return (
       <div className="flex flex-col text-text-muted">
-        {sortedProperties.map((property) => {
+        {bit.type.properties.map((property) => {
           const bitData = bit.data.find((data: any) => data.propertyId === property.id)
 
           return (

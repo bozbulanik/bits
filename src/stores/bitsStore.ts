@@ -1,6 +1,36 @@
 import { create } from 'zustand'
 import { Bit, BitData, BitTypeDefinition } from '../types/Bit'
-import { useBitTypesStore } from './bitTypesStore'
+import {
+  addDays,
+  differenceInCalendarDays,
+  differenceInDays,
+  differenceInMonths,
+  differenceInYears,
+  eachDayOfInterval,
+  eachMonthOfInterval,
+  eachYearOfInterval,
+  endOfDay,
+  endOfMonth,
+  endOfWeek,
+  endOfYear,
+  format,
+  getDaysInMonth,
+  getDaysInYear,
+  isThisMonth,
+  isThisWeek,
+  isThisYear,
+  isWithinInterval,
+  setHours,
+  startOfDay,
+  startOfMonth,
+  startOfToday,
+  startOfWeek,
+  startOfYear,
+  subDays,
+  subMonths,
+  subWeeks,
+  subYears
+} from 'date-fns'
 
 interface BitsStore {
   isLoading: boolean
@@ -18,103 +48,36 @@ interface BitsStore {
   deleteBit: (id: string) => Promise<void>
   searchBits: (query: string) => Bit[]
   getBitById: (id: string) => Bit | undefined
+
+  getDailyAvgAnalytics: (type: string, from: string, to: string) => [number, number] | undefined
+  getTotalAvgAnalytics: (type: string, from: string, to: string) => [number, number] | undefined
+  getChartAnalytics: (type: string, from: string, to: string) => [Date, number] | undefined
+  getMostUsedTypes: (top: number) => { name: string; count: number }[] | undefined
+  getActivityAnalytics: () => { name: Date; count: number }[] | undefined
 }
+
 export const useBitsStore = create<BitsStore>((set, get) => {
   if (typeof window !== 'undefined' && window.ipcRenderer) {
-    window.ipcRenderer.on('bits-updated', async (_, updatedBits) => {
-      set({ isLoading: true, loadError: null })
-      try {
-        const currentBitTypes = useBitTypesStore.getState().bitTypes
-        const parsedBitRows = await Promise.all(
-          updatedBits.map(async (bit: any) => {
-            const bit_datas = await window.ipcRenderer.invoke('getBitDataById', bit.id)
-            if (!bit_datas) {
-              console.warn(`Unknown data for bit id ${bit.id}`)
-              return null
-            }
-
-            const data = bit_datas.map(
-              (data: any) =>
-                ({
-                  propertyId: data.property_id,
-                  value: data.value
-                } as BitData)
-            )
-
-            const type = currentBitTypes.find((t: any) => t.id === bit.type_id)
-            if (!type) {
-              console.warn(`Unknown type_id "${bit.type_id}" for bit id ${bit.id}`)
-              return null
-            }
-
-            return {
-              id: bit.id,
-              type,
-              createdAt: bit.created_at,
-              updatedAt: bit.updated_at,
-              pinned: bit.pinned,
-              data
-            } as Bit
-          })
-        )
-
-        set({ bits: [...parsedBitRows], isLoading: false })
-      } catch (err) {
-        console.log('Failed to fetch bits', err)
-        set({ loadError: err as Error, isLoading: false })
-      }
+    window.ipcRenderer.on('bits-updated', (_, structuredBits) => {
+      set({ bits: structuredBits, isLoading: false })
     })
   }
+
   return {
     bits: [],
-    initialized: false,
     isLoading: false,
     loadError: null,
     loadBits: async () => {
       set({ isLoading: true, loadError: null })
-
       try {
-        const databaseRows = await window.ipcRenderer.invoke('getBits')
-        const currentBitTypes = useBitTypesStore.getState().bitTypes
-        const parsedBitRows = await Promise.all(
-          databaseRows.map(async (bit: any) => {
-            const bit_datas = await window.ipcRenderer.invoke('getBitDataById', bit.id)
-            if (!bit_datas) {
-              console.warn(`Unknown data for bit id ${bit.id}`)
-              return null
-            }
-
-            const data = bit_datas.map(
-              (data: any) =>
-                ({
-                  propertyId: data.property_id,
-                  value: data.value
-                } as BitData)
-            )
-
-            const type = currentBitTypes.find((t: any) => t.id === bit.type_id)
-            if (!type) {
-              console.warn(`Unknown type_id "${bit.type_id}" for bit id ${bit.id}`)
-              return null
-            }
-
-            return {
-              id: bit.id,
-              type,
-              createdAt: bit.created_at,
-              updatedAt: bit.updated_at,
-              pinned: bit.pinned,
-              data
-            } as Bit
-          })
-        )
-
-        set({ bits: [...parsedBitRows], isLoading: false })
+        const structuredBits = await window.ipcRenderer.invoke('getStructuredBits')
+        set({ bits: structuredBits, isLoading: false })
       } catch (err) {
-        console.log('Failed to fetch bits', err)
+        console.error('Failed to fetch bits', err)
         set({ loadError: err as Error, isLoading: false })
       }
     },
+
     addBit: async (type, data) => {
       const newBit: Bit = {
         id: crypto.randomUUID(),
@@ -124,38 +87,354 @@ export const useBitsStore = create<BitsStore>((set, get) => {
         type,
         data
       }
+
       set((state) => ({ bits: [...state.bits, newBit] }))
-      await window.ipcRenderer.invoke(
-        'addBit',
-        newBit.id,
-        newBit.type.id,
-        newBit.createdAt,
-        newBit.updatedAt,
-        newBit.pinned,
-        newBit.data
-      )
+
+      try {
+        await window.ipcRenderer.invoke(
+          'addBit',
+          newBit.id,
+          newBit.type.id,
+          newBit.createdAt,
+          newBit.updatedAt,
+          newBit.pinned,
+          newBit.data
+        )
+      } catch (error) {
+        console.error('Failed to add bit:', error)
+        set((state) => ({
+          bits: state.bits.filter((bit) => bit.id !== newBit.id),
+          loadError: error as Error
+        }))
+      }
     },
+
     updateBit: async (id, createdAt, updatedAt, pinned, data) => {
+      const previousBits = get().bits
+      const previousBit = previousBits.find((bit) => bit.id === id)
+
       set((state) => ({
-        bits: state.bits.map((type) =>
-          type.id === id ? { ...type, createdAt, updatedAt, pinned, data } : type
+        bits: state.bits.map((bit) =>
+          bit.id === id ? { ...bit, createdAt, updatedAt, pinned, data } : bit
         )
       }))
-      await window.ipcRenderer.invoke('updateBit', id, createdAt, updatedAt, pinned, data)
+
+      try {
+        await window.ipcRenderer.invoke('updateBit', id, createdAt, updatedAt, pinned, data)
+      } catch (error) {
+        console.error('Failed to update bit:', error)
+        set({
+          bits: previousBits,
+          loadError: error as Error
+        })
+      }
     },
+
     deleteBit: async (id) => {
+      const previousBits = get().bits
       set((state) => ({
-        bits: state.bits.filter((type) => type.id !== id)
+        bits: state.bits.filter((bit) => bit.id !== id)
       }))
-      await window.ipcRenderer.invoke('deleteBit', id)
+
+      try {
+        await window.ipcRenderer.invoke('deleteBit', id)
+      } catch (error) {
+        console.error('Failed to delete bit:', error)
+        set({
+          bits: previousBits,
+          loadError: error as Error
+        })
+      }
     },
     searchBits: (query): Bit[] => {
       const allBits = get().bits
       return allBits.filter((bit) => recursiveSearch(bit, query.toLowerCase()))
     },
+
     getBitById: (id) => {
       const { bits } = get()
       return bits.find((bit: Bit) => bit.id === id)
+    },
+
+    getDailyAvgAnalytics: (type, from, to) => {
+      const today = startOfToday()
+      const allBits = get().bits
+      if (allBits.length == 0) return [-1, -1]
+      const allBitsDates = allBits.map((bit) => ({ ...bit, date: new Date(bit.createdAt) }))
+
+      const countByFilter = (filterFn: any) => allBitsDates.filter(filterFn).length
+
+      const percentChange = (current: number, previous: number) => {
+        if (previous === 0) return current === 0 ? 0 : 100
+        return ((current - previous) / previous) * 100
+      }
+
+      switch (type) {
+        case 'weekly': {
+          const bitsThisWeek = countByFilter((bit: any) => isThisWeek(bit.date))
+          const bitsLastWeek = countByFilter((bit: any) => isLastWeek(bit.date))
+
+          const avgThisWeek = bitsThisWeek / 7
+          const avgLastWeek = bitsLastWeek / 7
+
+          return [avgThisWeek, percentChange(avgThisWeek, avgLastWeek)]
+        }
+
+        case 'monthly': {
+          const daysInMonth = getDaysInMonth(today)
+
+          const bitsThisMonth = countByFilter((bit: any) => isThisMonth(bit.date))
+          const bitsLastMonth = countByFilter((bit: any) => isLastMonth(bit.date))
+
+          const avgThisMonth = bitsThisMonth / daysInMonth
+          const daysLastMonth = getDaysInMonth(subMonths(today, 1))
+          const avgLastMonth = bitsLastMonth / daysLastMonth
+
+          return [avgThisMonth, percentChange(avgThisMonth, avgLastMonth)]
+        }
+
+        case 'yearly': {
+          const daysInYear = getDaysInYear(today)
+
+          const bitsThisYear = countByFilter((bit: any) => isThisYear(bit.date))
+          const bitsLastYear = countByFilter((bit: any) => isLastYear(bit.date))
+
+          const avgThisYear = bitsThisYear / daysInYear
+          const daysLastYear = getDaysInYear(subYears(today, 1))
+          const avgLastYear = bitsLastYear / daysLastYear
+
+          return [avgThisYear, percentChange(avgThisYear, avgLastYear)]
+        }
+
+        case 'custom': {
+          if (!from || !to) return [0, 0]
+
+          const fromDate = new Date(from)
+          const toDate = new Date(to)
+          const days = Math.max(1, differenceInCalendarDays(toDate, fromDate) + 1)
+
+          const bitsInRange = countByFilter(
+            (bit: any) => bit.date >= fromDate && bit.date <= toDate
+          )
+          const avgInRange = bitsInRange / days
+
+          const prevFrom = subDays(fromDate, days)
+          const prevTo = subDays(toDate, days)
+          const bitsPrevRange = countByFilter(
+            (bit: any) => bit.date >= prevFrom && bit.date <= prevTo
+          )
+          const avgPrevRange = bitsPrevRange / days
+
+          return [avgInRange, percentChange(avgInRange, avgPrevRange)]
+        }
+        case 'alltime': {
+          if (allBitsDates.length === 0) return [0, 0]
+
+          const sortedBits = allBitsDates.sort((a, b) => a.date.getTime() - b.date.getTime())
+          const firstDate = sortedBits[0].date
+          const lastDate = today
+
+          const totalDays = Math.max(1, differenceInCalendarDays(lastDate, firstDate) + 1)
+          const totalBits = allBitsDates.length
+          const avgAllTime = totalBits / totalDays
+
+          return [avgAllTime, 0]
+        }
+
+        default:
+          return [0, 0]
+      }
+    },
+    getTotalAvgAnalytics: (type, from, to) => {
+      const allBits = get().bits
+      if (allBits.length == 0) return [-1, -1]
+      const allBitsDates = allBits.map((bit) => ({ ...bit, date: new Date(bit.createdAt) }))
+
+      const countByFilter = (filterFn: any) => allBitsDates.filter(filterFn).length
+
+      const percentChange = (current: number, previous: number) => {
+        if (previous === 0) return current === 0 ? 0 : 100
+        return ((current - previous) / previous) * 100
+      }
+
+      switch (type) {
+        case 'weekly': {
+          const bitsThisWeek = countByFilter((bit: any) => isThisWeek(bit.date))
+          const bitsLastWeek = countByFilter((bit: any) => isLastWeek(bit.date))
+
+          return [bitsThisWeek, percentChange(bitsThisWeek, bitsLastWeek)]
+        }
+
+        case 'monthly': {
+          const bitsThisMonth = countByFilter((bit: any) => isThisMonth(bit.date))
+          const bitsLastMonth = countByFilter((bit: any) => isLastMonth(bit.date))
+
+          return [bitsThisMonth, percentChange(bitsThisMonth, bitsLastMonth)]
+        }
+
+        case 'yearly': {
+          const bitsThisYear = countByFilter((bit: any) => isThisYear(bit.date))
+          const bitsLastYear = countByFilter((bit: any) => isLastYear(bit.date))
+
+          return [bitsThisYear, percentChange(bitsThisYear, bitsLastYear)]
+        }
+
+        case 'custom': {
+          if (!from || !to) return [0, 0]
+
+          const fromDate = new Date(from)
+          const toDate = new Date(to)
+          const days = Math.max(1, differenceInCalendarDays(toDate, fromDate) + 1)
+
+          const bitsInRange = countByFilter(
+            (bit: any) => bit.date >= fromDate && bit.date <= toDate
+          )
+          const prevFrom = subDays(fromDate, days)
+          const prevTo = subDays(toDate, days)
+          const bitsPrevRange = countByFilter(
+            (bit: any) => bit.date >= prevFrom && bit.date <= prevTo
+          )
+
+          return [bitsInRange, percentChange(bitsInRange, bitsPrevRange)]
+        }
+        case 'alltime': {
+          return [allBits.length, 0]
+        }
+
+        default:
+          return [0, 0]
+      }
+    },
+    getChartAnalytics: (type, from, to) => {
+      const allBits = get().bits
+      if (allBits.length == 0) return [new Date(), -1]
+      const allBitsDates = allBits.map((bit) => ({ ...bit, date: new Date(bit.createdAt) }))
+
+      const today = startOfToday()
+
+      let intervals: any = []
+      let getIntervalKey
+      switch (type) {
+        case 'weekly':
+          intervals = eachDayOfInterval({
+            start: subDays(today, 3),
+            end: addDays(today, 3)
+          })
+          getIntervalKey = (date: any) => format(date, 'yyyy-MM-dd')
+          break
+        case 'monthly':
+          intervals = eachDayOfInterval({ start: startOfMonth(today), end: endOfMonth(today) })
+          getIntervalKey = (date: any) => format(date, 'yyyy-MM-dd')
+          break
+        case 'yearly':
+          intervals = eachMonthOfInterval({ start: startOfYear(today), end: endOfYear(today) })
+          getIntervalKey = (date: any) => format(startOfMonth(date), 'yyyy-MM-dd')
+          break
+        case 'custom': {
+          const start = new Date(from)
+          const end = new Date(to)
+
+          const daysDiff = differenceInDays(end, start)
+          const monthsDiff = differenceInMonths(end, start)
+          const yearsDiff = differenceInYears(end, start)
+
+          if (daysDiff <= 30) {
+            intervals = eachDayOfInterval({ start, end })
+            getIntervalKey = (date: any) => format(date, 'yyyy-MM-dd')
+          } else if (monthsDiff >= 3 && yearsDiff < 1) {
+            intervals = eachMonthOfInterval({ start, end })
+            getIntervalKey = (date: any) => format(date, 'yyyy-MM')
+          } else if (yearsDiff >= 1) {
+            intervals = eachYearOfInterval({ start, end })
+            getIntervalKey = (date: any) => format(date, 'yyyy')
+          } else {
+            intervals = eachMonthOfInterval({ start, end })
+            getIntervalKey = (date: any) => format(date, 'yyyy-MM')
+          }
+
+          break
+        }
+        case 'alltime': {
+          const sortedBits = allBitsDates.sort((a, b) => a.date.getTime() - b.date.getTime())
+          const start = startOfDay(sortedBits[0].date)
+          const end = endOfDay(sortedBits[sortedBits.length - 1].date)
+
+          const daysDiff = differenceInDays(end, start)
+          const monthsDiff = differenceInMonths(end, start)
+          const yearsDiff = differenceInYears(end, start)
+
+          if (daysDiff <= 30) {
+            intervals = eachDayOfInterval({ start, end })
+            getIntervalKey = (date: any) => format(date, 'yyyy-MM-dd')
+          } else if (monthsDiff >= 3 && yearsDiff < 1) {
+            intervals = eachMonthOfInterval({ start, end })
+            getIntervalKey = (date: any) => format(date, 'yyyy-MM')
+          } else if (yearsDiff >= 1) {
+            intervals = eachYearOfInterval({ start, end })
+            getIntervalKey = (date: any) => format(date, 'yyyy')
+          } else {
+            // fallback for intermediate ranges (e.g., 1–3 months)
+            intervals = eachMonthOfInterval({ start, end })
+            getIntervalKey = (date: any) => format(date, 'yyyy-MM')
+          }
+
+          break
+        }
+        default:
+          return []
+      }
+
+      const counts = new Map()
+
+      for (const bit of allBitsDates) {
+        const key = getIntervalKey(bit.date)
+        counts.set(key, (counts.get(key) || 0) + 1)
+      }
+
+      const result = intervals.map((date: any) => {
+        const key = getIntervalKey(date)
+        return {
+          interval: date,
+          Count: counts.get(key) || 0
+        }
+      })
+
+      return result
+    },
+    getMostUsedTypes: (top: number) => {
+      const allBits = get().bits
+      const typeCounts: Record<string, number> = {}
+      for (const bit of allBits) {
+        const typeName = typeof bit.type === 'string' ? bit.type : bit.type.name
+        typeCounts[typeName] = (typeCounts[typeName] || 0) + 1
+      }
+      const mostUsedTypes = Object.entries(typeCounts)
+        .map(([name, count]) => {
+          return { name: name, count: count }
+        })
+        .sort((a, b) => b.count - a.count)
+        .slice(0, top)
+
+      return mostUsedTypes
+    },
+    getActivityAnalytics: () => {
+      const allBits = get().bits
+      if (allBits.length == 0) return [{ name: new Date(), count: -1 }]
+
+      const today = startOfToday()
+
+      const hourlyCounts = Array.from({ length: 24 }, (_, hour) => ({
+        name: setHours(today, hour),
+        count: 0
+      }))
+
+      allBits.forEach((bit) => {
+        const date = new Date(bit.createdAt)
+        const hour = date.getHours()
+        hourlyCounts[hour].count++
+      })
+
+      return hourlyCounts
     }
   }
 })
@@ -178,4 +457,20 @@ function recursiveSearch(obj: any, query: string): boolean {
   }
 
   return false
+}
+
+const isLastWeek = (date: any) => {
+  const lastWeekStart = startOfWeek(subWeeks(new Date(), 1))
+  const lastWeekEnd = endOfWeek(subWeeks(new Date(), 1))
+  return isWithinInterval(date, { start: lastWeekStart, end: lastWeekEnd })
+}
+const isLastMonth = (date: any) => {
+  const lastMonthStart = startOfMonth(subMonths(new Date(), 1))
+  const lastMonthEnd = endOfMonth(subMonths(new Date(), 1))
+  return isWithinInterval(date, { start: lastMonthStart, end: lastMonthEnd })
+}
+const isLastYear = (date: any) => {
+  const lastYearStart = startOfYear(subYears(new Date(), 1))
+  const lastYearEnd = endOfYear(subYears(new Date(), 1))
+  return isWithinInterval(date, { start: lastYearStart, end: lastYearEnd })
 }
