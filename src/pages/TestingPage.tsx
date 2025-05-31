@@ -5,9 +5,12 @@ import {
   BitData,
   BitTypeDefinition,
   BitTypePropertyDefinition,
-  BitTypePropertyDefinitionType
+  BitTypePropertyDefinitionType,
+  Collection,
+  CollectionItem,
+  Note
 } from '../types/Bit'
-import { format } from 'date-fns'
+import { format, formatDistanceToNow } from 'date-fns'
 
 import {
   Brackets,
@@ -31,19 +34,75 @@ import {
   Sun
 } from 'lucide-react'
 import * as Icons from 'lucide-react'
-import { FC, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import Button from '../components/Button'
 import Input from '../components/Input'
 import { useSettingsStore } from '../stores/settingsStore'
-import Combobox from '../components/Combobox'
-import SegmentedControl from '../components/SegmentedControl'
 import NumberInput from '../components/NumberInput'
 import Checkbox from '../components/Checkbox'
+import CalendarInput from '../components/DateInput'
+import { useCollectionsStore } from '../stores/collectionsStore'
+import TimeInput from '../components/TimeInput'
+import { getPropertyIcon } from '../utils/getIcon'
 
-const TestingPage = () => {
-  const { settings, setSetting } = useSettingsStore()
-  const { bitTypes, addBitType, deleteBitType } = useBitTypesStore()
-  const { bits, addBit, deleteBit, updateBit } = useBitsStore()
+interface BitNoteProps {
+  note: Note
+  bit: Bit
+}
+const BitNoteItem: React.FC<BitNoteProps> = ({ note, bit }) => {
+  const { deleteBitNote, updateBitNote } = useBitsStore()
+  const [noteString, setNoteString] = useState<string>('Untitled')
+  const [updateModeOn, setUpdateModeOn] = useState<boolean>(false)
+
+  useEffect(() => {
+    setNoteString(note.content || 'Untitled')
+  }, [note.content])
+
+  const handleUpdateMode = () => {
+    if (updateModeOn) {
+      setUpdateModeOn(false)
+    }
+  }
+  return (
+    <div onClick={handleUpdateMode} className="flex items-center gap-2 p-2 border border-border dark:border-border-dark rounded-md">
+      {updateModeOn ? (
+        <Input
+          value={noteString}
+          onChange={(e) => setNoteString(e.target.value)}
+          onBlur={() => {
+            updateBitNote(note.id, bit.id, noteString)
+            setUpdateModeOn(false)
+          }}
+          autoFocus
+          onClick={(e) => e.stopPropagation()}
+        />
+      ) : (
+        <p
+          onClick={(e) => {
+            e.stopPropagation()
+            setUpdateModeOn(true)
+          }}
+          className="text-sm"
+        >
+          {noteString}
+        </p>
+      )}
+      <p className="ml-auto text-text-muted">Updated {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true, includeSeconds: true })}</p>
+
+      <Button variant={'icon'} onClick={() => deleteBitNote(note.id, bit.id)}>
+        <Icons.Trash size={16} strokeWidth={1.5} />
+      </Button>
+    </div>
+  )
+}
+
+interface BitCardProps {
+  bit: Bit
+  index: number
+}
+
+const BitCard: React.FC<BitCardProps> = ({ bit, index }) => {
+  const { deleteBit, updateBit, addBitNote, togglePin } = useBitsStore()
 
   function renderValueByType(type: BitTypePropertyDefinitionType, value: any) {
     switch (type) {
@@ -90,9 +149,8 @@ const TestingPage = () => {
         return <span>{String(value)}</span>
     }
   }
-
   function renderBitData(bit: Bit) {
-    const sortedProperties = [...bit.type.properties].sort((a, b) => a.sortId - b.sortId)
+    const sortedProperties = [...bit.type.properties].sort((a, b) => a.order - b.order)
 
     return (
       <div className="flex flex-col text-text-muted">
@@ -115,48 +173,164 @@ const TestingPage = () => {
       </div>
     )
   }
+  function getIconComponent(name: string): FC<{ size?: number; strokeWidth?: number }> {
+    const Icon = Icons[name as keyof typeof Icons] as FC<{ size?: number; strokeWidth?: number }>
+    return Icon
+  }
+
+  const handlePinning = (bit: Bit) => {
+    togglePin(bit.id)
+  }
+
+  const [newNoteString, setNewNoteString] = useState<string>('')
+  const handleAddNewNote = () => {
+    addBitNote(bit.id, newNoteString)
+  }
+  return (
+    <div key={index} className="border border-border dark:border-border-dark bg-scry-bg dark:bg-scry-bg-dark rounded-md p-2 flex flex-col gap-2">
+      <div className="flex gap-2 items-center">
+        {(() => {
+          const Icon = getIconComponent(bit.type.iconName)
+          return Icon ? <Icon size={16} strokeWidth={1.5} /> : null
+        })()}
+        <p className="font-semibold">{bit.type.name}</p>
+
+        <div className="ml-auto flex gap-2">
+          <Button onClick={() => handlePinning(bit)} variant={'icon'}>
+            {bit.pinned ? <PinOff size={16} strokeWidth={1.5} /> : <Pin size={16} strokeWidth={1.5} />}
+          </Button>
+          <Button onClick={() => deleteBit(bit.id)} variant={'icon'}>
+            <X size={16} strokeWidth={1.5} />
+          </Button>
+        </div>
+      </div>
+      <div className="text-sm flex gap-2 justify-between">
+        <p>{format(new Date(bit.createdAt), 'EE, MMM d hh:mm')}</p>
+        <p>{format(new Date(bit.updatedAt), 'EE, MMM d hh:mm')}</p>
+      </div>
+      {renderBitData(bit)}
+      <div className="flex gap-2 items-center w-full">
+        <Input value={newNoteString} onChange={(e) => setNewNoteString(e.target.value)} className="flex-1" placeholder="Add note" />
+        <Button onClick={handleAddNewNote} className="ml-auto">
+          Add note
+        </Button>
+      </div>
+      <div className="flex flex-col gap-2">
+        {bit.notes?.map((note) => (
+          <BitNoteItem note={note} bit={bit} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+interface CollectionItemComponentProps {
+  collection: Collection
+}
+
+const CollectionItemComponent: React.FC<CollectionItemComponentProps> = ({ collection }) => {
+  function getIconComponent(name: string): FC<{ size?: number; strokeWidth?: number }> {
+    const Icon = Icons[name as keyof typeof Icons] as FC<{ size?: number; strokeWidth?: number }>
+    return Icon
+  }
+  const getTextValue = (bit: Bit) => {
+    if (!bit) return null
+    // If it includes a text property render that otherwise render untitled
+    const textProperty = bit.type.properties.find((property) => property.type === 'text')
+    if (!textProperty) return null
+    const bitData = bit.data.find((data) => data.propertyId === textProperty.id)
+    if (!bitData) return null
+    return <p className="text-sm">{bitData.value}</p>
+  }
+  const { bits, getBitById } = useBitsStore()
+  const { deleteCollection, updateCollection } = useCollectionsStore()
+  const [selectedBit, setSelectedBit] = useState<Bit>()
+
+  const onBitSelect = (e: any) => {
+    const bit = bits.find((bit: Bit) => bit.id === e.target.value)
+    setSelectedBit(bit)
+  }
+  const [currentCollectionItems, setCurrentCollectionItems] = useState<CollectionItem[]>([])
+
+  const handleAddBit = () => {
+    if (!selectedBit) return
+    const length = currentCollectionItems.length
+    const newCollectionItem: CollectionItem = {
+      id: crypto.randomUUID(),
+      bitId: selectedBit.id,
+      orderIndex: length
+    }
+    setCurrentCollectionItems((prev) => [...prev, newCollectionItem])
+  }
+  const updateTheCollection = () => {
+    updateCollection(collection.id, collection.name, collection.iconName, collection.createdAt, new Date().toISOString(), currentCollectionItems)
+    setCurrentCollectionItems([])
+  }
+
+  return (
+    <div className="border border-border dark:border-border-dark rounded-md p-2 bg-scry-bg dark:bg-scry-bg-dark flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        {(() => {
+          const Icon = getIconComponent(collection.iconName)
+          return Icon ? <Icon size={16} strokeWidth={1.5} /> : null
+        })()}
+        <p>{collection.name}</p>
+        <Button onClick={() => deleteCollection(collection.id)} variant={'icon'} className="ml-auto">
+          <Icons.Trash size={16} strokeWidth={1.5} />
+        </Button>
+      </div>
+      <div className="text-sm flex gap-2 justify-between">
+        <p>{format(new Date(collection.createdAt), 'EE, MMM d hh:mm')}</p>
+        <p>{format(new Date(collection.updatedAt), 'EE, MMM d hh:mm')}</p>
+      </div>
+      <div className="p-2 border border-border dark:border-border-dark rounded-md">
+        {collection.items.map((item) => {
+          const bit = getBitById(item.bitId)
+          if (!bit) return
+          return (
+            <div className="flex gap-2 items-center">
+              {(() => {
+                const Icon = getIconComponent(bit?.type.iconName)
+                return Icon ? <Icon size={16} strokeWidth={1.5} /> : null
+              })()}
+              <p className="truncate">{bit?.id}</p>
+            </div>
+          )
+        })}
+      </div>
+      <div className="flex gap-2">
+        <select value={selectedBit?.id} onChange={onBitSelect}>
+          {bits.map((bit, index) => {
+            return (
+              <option key={index} value={bit.id}>
+                {getTextValue(bit)}
+              </option>
+            )
+          })}
+        </select>
+        <Button onClick={handleAddBit}>Add bit</Button>
+      </div>
+      <Button onClick={updateTheCollection}>Update collection</Button>
+    </div>
+  )
+}
+
+const TestingPage = () => {
+  const { settings, setSetting } = useSettingsStore()
+  const { bitTypes, addBitType, deleteBitType } = useBitTypesStore()
+  const { bits, addBit } = useBitsStore()
 
   function getIconComponent(name: string): FC<{ size?: number; strokeWidth?: number }> {
     const Icon = Icons[name as keyof typeof Icons] as FC<{ size?: number; strokeWidth?: number }>
     return Icon
   }
 
-  const getPropertyIcon = (type: string) => {
-    switch (type) {
-      case 'bit':
-        return <Logs size={16} strokeWidth={1.5} />
-      case 'text':
-        return <ALargeSmall size={16} strokeWidth={1.5} />
-      case 'number':
-        return <Hash size={16} strokeWidth={1.5} />
-      case 'select':
-        return <Parentheses size={16} strokeWidth={1.5} />
-      case 'multiselect':
-        return <Brackets size={16} strokeWidth={1.5} />
-      case 'date':
-        return <Calendar1 size={16} strokeWidth={1.5} />
-      case 'file':
-        return <File size={16} strokeWidth={1.5} />
-      case 'checkbox':
-        return <Check size={16} strokeWidth={1.5} />
-      case 'url':
-        return <Link2 size={16} strokeWidth={1.5} />
-      case 'email':
-        return <Mail size={16} strokeWidth={1.5} />
-      case 'phone':
-        return <Phone size={16} strokeWidth={1.5} />
-      case 'image':
-        return <Image size={16} strokeWidth={1.5} />
-      default:
-        return <Text size={16} strokeWidth={1.5} />
-    }
-  }
-
   const [bitTypeName, setBitTypeName] = useState<string>('')
+  const [bitTypeDescription, setBitTypeDescription] = useState<string>('')
+
   const [bitTypeIconName, setBitTypeIconName] = useState<string>('')
   const [bitTypePropertyName, setBitTypePropertyName] = useState<string>('')
-  const [bitTypePropertyType, setBitTypePropertyType] =
-    useState<BitTypePropertyDefinitionType>('text')
+  const [bitTypePropertyType, setBitTypePropertyType] = useState<BitTypePropertyDefinitionType>('text')
   const [bitTypePropertyRequired, setBitTypePropertyRequired] = useState<boolean>(false)
   const [bitTypePropertyDV, setBitTypePropertyDV] = useState<string>('')
 
@@ -172,7 +346,8 @@ const TestingPage = () => {
       name: bitTypePropertyName,
       type: bitTypePropertyType,
       required: bitTypePropertyRequired,
-      defaultValue: bitTypePropertyDV
+      defaultValue: bitTypePropertyDV,
+      order: length
     }
     setCurrentProperties((prev) => [...prev, newBitTypePropertyDefinition])
     setBitTypePropertyName('')
@@ -181,11 +356,14 @@ const TestingPage = () => {
     setBitTypePropertyDV('')
   }
   const handleAddBitType = () => {
-    addBitType(bitTypeName, bitTypeIconName, currentProperties)
+    const id = crypto.randomUUID()
+
+    addBitType(id, bitTypeName, bitTypeDescription, bitTypeIconName, currentProperties)
     setCurrentProperties([])
     setBitTypePropertyName('')
     setBitTypePropertyType('text')
     setBitTypeName('')
+    setBitTypeDescription('')
     setBitTypeIconName('')
   }
 
@@ -197,7 +375,7 @@ const TestingPage = () => {
       const existingItemIndex = prevData.findIndex((item) => item.propertyId === prop.id)
 
       const newItem: BitData = {
-        id: crypto.randomUUID(),
+        bitId: crypto.randomUUID(),
         propertyId: prop.id,
         value
       }
@@ -234,25 +412,20 @@ const TestingPage = () => {
           />
         )
       case 'number' as BitTypePropertyDefinitionType:
-        return (
-          <NumberInput
-            value={parseFloat(prop.defaultValue as string)}
-            onChange={(e) => handleDataValueChange(prop, e || prop.defaultValue)}
-          />
-        )
+        return <NumberInput value={parseFloat(prop.defaultValue as string)} onChange={(e) => handleDataValueChange(prop, e || prop.defaultValue)} />
       case 'select' as BitTypePropertyDefinitionType:
         return <div>Select WIP</div>
       case 'multiselect' as BitTypePropertyDefinitionType:
         return <div>Multi-Select WIP</div>
       case 'date' as BitTypePropertyDefinitionType:
         return (
-          <Input
-            variant={'ghost'}
-            type="date"
-            placeholder="Enter..."
-            onChange={(e) => handleDataValueChange(prop, e.target.value || prop.defaultValue)}
-            required={prop.required}
-            rightSection={<Calendar1 size={16} strokeWidth={1.5} />}
+          <CalendarInput
+            ghost
+            className="w-full"
+            placeholder={format(prop.defaultValue as string, 'dd MM yyyy') as string}
+            setCurrentDisplayDate={(e) => handleDataValueChange(prop, e)}
+            horizontalAlign="right"
+            ranged
           />
         )
       case 'file' as BitTypePropertyDefinitionType:
@@ -268,10 +441,7 @@ const TestingPage = () => {
       case 'checkbox' as BitTypePropertyDefinitionType:
         return (
           <>
-            <Input
-              type="checkbox"
-              onChange={(e) => handleDataValueChange(prop, e.target.checked || prop.defaultValue)}
-            />
+            <Input type="checkbox" onChange={(e) => handleDataValueChange(prop, e.target.checked || prop.defaultValue)} />
           </>
         )
       case 'url' as BitTypePropertyDefinitionType:
@@ -309,31 +479,34 @@ const TestingPage = () => {
         return <p className="text-red-500">Unsupported property type: {prop.type}</p>
     }
   }
-  const handlePinning = (bit: Bit) => {
-    if (bit.pinned) {
-      updateBit(bit.id, bit.createdAt, new Date().toISOString(), 0, bit.data)
-    } else {
-      updateBit(bit.id, bit.createdAt, new Date().toISOString(), 1, bit.data)
-    }
+
+  const { collections, addCollection } = useCollectionsStore()
+  const [collectionName, setCollectionName] = useState<string>('')
+  const [collectionIconName, setCollectionIconName] = useState<string>('')
+  const handleAddCollection = () => {
+    addCollection(collectionName, collectionIconName, [])
+    setCollectionName('')
+    setCollectionIconName('')
   }
 
   return (
     <div className="w-full h-full flex gap-2">
       <div className="p-2 flex flex-col gap-2">
-        <Button
-          variant={'icon'}
-          onClick={() =>
-            setSetting('theme.mode', settings.theme.mode == 'light' ? 'dark' : 'light')
-          }
-        >
-          {settings.theme.mode == 'light' ? (
-            <Moon size={16} strokeWidth={1.5} />
-          ) : (
-            <Sun size={16} strokeWidth={1.5} />
-          )}
+        <Button variant={'icon'} onClick={() => setSetting('theme.mode', settings.theme.mode == 'light' ? 'dark' : 'light')}>
+          {settings.theme.mode == 'light' ? <Moon size={16} strokeWidth={1.5} /> : <Sun size={16} strokeWidth={1.5} />}
         </Button>
-        <div className="flex  p-2">
-          <NumberInput value={2} onChange={() => {}} />
+        <div className="flex p-2 flex-col gap-2 ">
+          <div className="flex flex-col gap-2">
+            <Input value={collectionName} onChange={(e) => setCollectionName(e.target.value)} placeholder="Collection name" />
+            <Input value={collectionIconName} onChange={(e) => setCollectionIconName(e.target.value)} placeholder="Collection icon name" />
+            <Button onClick={handleAddCollection}>Add collection</Button>
+          </div>
+          {collections.map((collection) => (
+            <CollectionItemComponent collection={collection} />
+          ))}
+        </div>
+        <div>
+          <TimeInput twelveHours={false} includeSeconds={false} placeholder="Set time" horizontalAlign="left" setCurrentDisplayTime={() => {}} />
         </div>
       </div>
       <div className="overflow-auto flex flex-col p-2 gap-2 flex-1">
@@ -372,63 +545,22 @@ const TestingPage = () => {
             </div>
           </div>
         </div>
-        <div className="flex flex-col gap-2 overflow-auto">
-          {bits &&
-            bits.map((bit, index) => (
-              <div
-                key={index}
-                className="border border-border dark:border-border-dark bg-scry-bg dark:bg-scry-bg-dark rounded-md p-2 flex flex-col gap-2"
-              >
-                <div className="flex gap-2 items-center">
-                  {(() => {
-                    const Icon = getIconComponent(bit.type.iconName)
-                    return Icon ? <Icon size={16} strokeWidth={1.5} /> : null
-                  })()}
-                  <p className="font-semibold">{bit.type.name}</p>
-
-                  <div className="ml-auto flex gap-2">
-                    <Button onClick={() => handlePinning(bit)} variant={'icon'}>
-                      {bit.pinned ? (
-                        <PinOff size={16} strokeWidth={1.5} />
-                      ) : (
-                        <Pin size={16} strokeWidth={1.5} />
-                      )}
-                    </Button>
-                    <Button onClick={() => deleteBit(bit.id)} variant={'icon'}>
-                      <X size={16} strokeWidth={1.5} />
-                    </Button>
-                  </div>
-                </div>
-                <div className="text-sm flex gap-2 justify-between">
-                  <p>{format(new Date(bit.createdAt), 'EE, MMM d hh:mm')}</p>
-                  <p>{format(new Date(bit.updatedAt), 'EE, MMM d hh:mm')}</p>
-                </div>
-                {renderBitData(bit)}
-              </div>
-            ))}
-        </div>
+        <div className="flex flex-col gap-2 overflow-auto">{bits && bits.map((bit, index) => <BitCard bit={bit} index={index} />)}</div>
       </div>
       <div className="overflow-auto flex flex-col p-2 gap-2 flex-1">
         <div className="flex flex-col gap-2 p-2">
-          <Input
-            variant={'default'}
-            value={bitTypeName}
-            onChange={(e) => setBitTypeName(e.target.value)}
-            placeholder="Bit Type Name"
+          <Input variant={'default'} value={bitTypeName} onChange={(e) => setBitTypeName(e.target.value)} placeholder="Bit Type Name" />
+          <textarea
+            className="h-32 resize-none focus:outline-none border rounded-md border-input-border dark:border-input-border-dark bg-input-bg dark:bg-input-bg-dark hover:bg-input-bg-hover dark:hover:bg-input-bg-hover hover:border-input-border-hover dark:hover:border-input-border-hover-dark p-1 text-sm placeholder:text-text-muted"
+            value={bitTypeDescription}
+            onChange={(e) => setBitTypeDescription(e.target.value)}
+            placeholder="Bit Type Description"
           />
-          <Input
-            variant={'default'}
-            value={bitTypeIconName}
-            onChange={(e) => setBitTypeIconName(e.target.value)}
-            placeholder="Bit Type Icon Name"
-          />
+
+          <Input variant={'default'} value={bitTypeIconName} onChange={(e) => setBitTypeIconName(e.target.value)} placeholder="Bit Type Icon Name" />
           <div className="flex flex-col gap-2 border border-border dark:border-border-dark bg-scry-bg dark:bg-scry-bg-dark rounded-md p-2">
             <p className="font-semibold">Properties</p>
-            <Input
-              value={bitTypePropertyName}
-              onChange={(e) => setBitTypePropertyName(e.target.value)}
-              placeholder="Bit Type Property Name"
-            />
+            <Input value={bitTypePropertyName} onChange={(e) => setBitTypePropertyName(e.target.value)} placeholder="Bit Type Property Name" />
             <select value={bitTypePropertyType} onChange={onPropertyTypeSelect}>
               <option value="text">text</option>
               <option value="number">number</option>
@@ -436,20 +568,14 @@ const TestingPage = () => {
             <div className="flex gap-2 items-center">
               <label>Required</label>
 
-              <Checkbox
-                checked={bitTypePropertyRequired}
-                onChange={(e) => setBitTypePropertyRequired(e)}
-              />
+              <Checkbox checked={bitTypePropertyRequired} onChange={(e) => setBitTypePropertyRequired(e)} />
             </div>
-            <Input
-              value={bitTypePropertyDV}
-              onChange={(e) => setBitTypePropertyDV(e.target.value)}
-              placeholder="Default Value"
-            />
+            <Input value={bitTypePropertyDV} onChange={(e) => setBitTypePropertyDV(e.target.value)} placeholder="Default Value" />
             <Button onClick={addProperty} variant={'default'}>
               Add Property
             </Button>
           </div>
+
           <Button onClick={handleAddBitType} variant={'default'}>
             Add Bit Type
           </Button>
@@ -462,46 +588,38 @@ const TestingPage = () => {
             ))}
           </div>
         </div>
-        <div className="flex flex-col gap-2 overflow-auto">
-          {bitTypes.map((bitType, index) => (
-            <div
-              key={index}
-              className="p-2 border border-border dark:border-border-dark bg-scry-bg dark:bg-scry-bg-dark rounded-md flex flex-col gap-2"
-            >
-              <div className="flex gap-2 items-center">
-                {(() => {
-                  const Icon = getIconComponent(bitType.iconName)
-                  return Icon ? <Icon size={16} strokeWidth={1.5} /> : null
-                })()}
-                <p className="font-semibold">{bitType.name}</p>
-                <Button
-                  onClick={() => deleteBitType(bitType.id)}
-                  variant={'icon'}
-                  className="ml-auto"
-                >
-                  <X size={16} strokeWidth={1.5} />
-                </Button>
-              </div>
-              <div className="flex flex-col gap-2">
-                {bitType.properties.map((prop, index) => (
-                  <div
-                    key={index}
-                    className="px-2 border border-border dark:border-border-dark bg-bg-hover/50 dark:bg-bg-hover-dark/50 rounded-md "
-                  >
-                    <div className="flex gap-2 items-center justify-between">
-                      {getPropertyIcon(prop.type)}
-                      <p className="mr-auto font-medium"> {prop.name}</p>
-                      <p className="text-text-muted text-sm"> {prop.defaultValue}</p>
-                      <p className="text-text-muted text-xs">
-                        {prop.required ? 'Not required' : 'Required'}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+      </div>
+      <div className="flex flex-col gap-2 overflow-auto">
+        {bitTypes.map((bitType, index) => (
+          <div
+            key={index}
+            className="p-2 border border-border dark:border-border-dark bg-scry-bg dark:bg-scry-bg-dark rounded-md flex flex-col gap-2"
+          >
+            <div className="flex gap-2 items-center">
+              {(() => {
+                const Icon = getIconComponent(bitType.iconName)
+                return Icon ? <Icon size={16} strokeWidth={1.5} /> : null
+              })()}
+              <p className="font-semibold">{bitType.name}</p>
+              <Button onClick={() => deleteBitType(bitType.id)} variant={'icon'} className="ml-auto">
+                <X size={16} strokeWidth={1.5} />
+              </Button>
             </div>
-          ))}
-        </div>
+
+            <div className="flex flex-col gap-2">
+              {bitType.properties.map((prop, index) => (
+                <div key={index} className="px-2 border border-border dark:border-border-dark bg-bg-hover/50 dark:bg-bg-hover-dark/50 rounded-md ">
+                  <div className="flex gap-2 items-center justify-between">
+                    {getPropertyIcon(prop.type)}
+                    <p className="mr-auto font-medium"> {prop.name}</p>
+                    <p className="text-text-muted text-sm"> {prop.defaultValue}</p>
+                    <p className="text-text-muted text-xs">{prop.required ? 'required' : 'Not Required'}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )

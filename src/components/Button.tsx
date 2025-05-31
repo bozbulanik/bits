@@ -2,44 +2,42 @@ import { VariantProps, cva } from 'class-variance-authority'
 import { ComponentProps, forwardRef } from 'react'
 import { cn } from '../utils'
 
-const buttonVariants = cva(
-  'focus:outline-none cursor-pointer rounded-md flex gap-2 items-center justify-center font-semibold',
-  {
-    variants: {
-      variant: {
-        default:
-          'p-1.5 h-8 bg-button-bg dark:bg-button-bg-dark border border-button-border dark:border-button-border-dark hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark hover:border-button-border-hover dark:hover:border-button-border-hover-dark',
-        icon: 'w-6.5 h-6.5 bg-button-bg dark:bg-button-bg-dark border border-button-border dark:border-button-border-dark hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark hover:border-button-border-hover dark:hover:border-button-border-hover-dark',
+const buttonVariants = cva('focus:outline-none cursor-pointer rounded-md flex gap-2 items-center justify-center font-semibold', {
+  variants: {
+    variant: {
+      default:
+        'p-1.5 h-7 bg-button-bg dark:bg-button-bg-dark border border-button-border dark:border-button-border-dark hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark hover:border-button-border-hover dark:hover:border-button-border-hover-dark',
+      defaultSecond:
+        'p-1.5 h-7 border border-button-border dark:border-button-border-dark hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark hover:border-button-border-hover dark:hover:border-button-border-hover-dark',
 
-        ghost:
-          'p-1.5 h-7 bg-transparent hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark',
-        iconGhost:
-          'w-6.5 h-6.5 bg-transparent hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark',
+      icon: 'w-6.5 h-6.5 bg-button-bg dark:bg-button-bg-dark border border-button-border dark:border-button-border-dark hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark hover:border-button-border-hover dark:hover:border-button-border-hover-dark',
 
-        destructive:
-          'p-1.5 h-8 bg-button-bg-error dark:bg-button-bg-error-dark hover:bg-button-bg-error-hover dark:hover:bg-button-bg-error-hover-dark border border-button-border-error dark:border-button-border-error-dark hover:border-button-border-error-hover dark:hover:border-button-border-error-hover-dark',
-        iconDestructive:
-          'w-6.5 h-6.5 bg-button-bg-error dark:bg-button-bg-error-dark hover:bg-button-bg-error-hover dark:hover:bg-button-bg-error-hover-dark border border-button-border-error dark:border-button-border-error-dark hover:border-button-border-error-hover dark:hover:border-button-border-error-hover-dark',
-        iconDestructiveGhost:
-          'w-6.5 h-6.5 text-text dark:text-text-dark hover:text-text-error dark:hover:text-text-error-dark bg-transparent hover:bg-button-bg-error-hover dark:hover:bg-button-bg-error-hover-dark',
+      ghost: 'p-1.5 h-7 bg-transparent hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark',
+      iconGhost: 'w-6.5 h-6.5 bg-transparent hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark',
 
-        tab: 'p-1.5 h-8 bg-transparent border border-transparent hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark ',
-        selectedTab:
-          'p-1.5 h-8 bg-transparent border border-button-border dark:border-button-border-dark hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark hover:border-button-border-hover dark:hover:border-button-border-hover-dark'
-      },
-      size: {
-        xs: 'text-xs',
-        sm: 'text-sm',
-        md: 'text-md',
-        lg: 'text-lg'
-      }
+      destructive:
+        'p-1.5 h-7 bg-button-bg-error dark:bg-button-bg-error-dark hover:bg-button-bg-error-hover dark:hover:bg-button-bg-error-hover-dark border border-button-border-error dark:border-button-border-error-dark hover:border-button-border-error-hover dark:hover:border-button-border-error-hover-dark',
+      iconDestructive:
+        'w-6.5 h-6.5 bg-button-bg-error dark:bg-button-bg-error-dark hover:bg-button-bg-error-hover dark:hover:bg-button-bg-error-hover-dark border border-button-border-error dark:border-button-border-error-dark hover:border-button-border-error-hover dark:hover:border-button-border-error-hover-dark',
+      iconDestructiveGhost:
+        'w-6.5 h-6.5 text-text dark:text-text-dark hover:text-red-700 dark:hover:text-red-300 bg-transparent hover:bg-button-bg-error-hover dark:hover:bg-button-bg-error-hover-dark',
+
+      tab: 'p-1.5 h-8 bg-transparent border border-transparent hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark ',
+      selectedTab:
+        'p-1.5 h-8 bg-transparent border border-button-border dark:border-button-border-dark hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark hover:border-button-border-hover dark:hover:border-button-border-hover-dark'
     },
-    defaultVariants: {
-      variant: 'default',
-      size: 'xs'
+    size: {
+      xs: 'text-xs',
+      sm: 'text-sm',
+      md: 'text-md',
+      lg: 'text-lg'
     }
+  },
+  defaultVariants: {
+    variant: 'default',
+    size: 'xs'
   }
-)
+})
 
 interface ButtonProps extends ComponentProps<'button'>, VariantProps<typeof buttonVariants> {
   children?: React.ReactNode
@@ -51,11 +49,7 @@ const Button: React.FC<ButtonProps> = forwardRef<HTMLButtonElement, ButtonProps>
       <button
         ref={ref}
         disabled={disabled}
-        className={cn(
-          buttonVariants({ variant, size }),
-          disabled && 'opacity-50 cursor-not-allowed',
-          className
-        )}
+        className={cn(buttonVariants({ variant, size }), disabled && 'opacity-50 cursor-not-allowed', className)}
         {...props}
       >
         {children}

@@ -1,3 +1,5 @@
+import 'leaflet/dist/leaflet.css'
+import 'flag-icons/css/flag-icons.min.css'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import RootLayout from './layouts/RootLayout'
 import SearchPage from './pages/SearchPage'
@@ -15,14 +17,22 @@ import SettingsRouter from './pages/settings/SettingsRouter'
 import { useShortcutsStore } from './stores/shortcutsStore'
 import BitViewer from './pages/BitViewer'
 import CalendarRouter from './pages/calendar/CalendarRouter'
-import BitTypeManager from './pages/bittypemanager/BitTypeManager'
-import BitTypeCreate from './pages/bittypemanager/BitTypeCreate'
-import BitTypeEdit from './pages/bittypemanager/BitTypeEdit'
+import BitTypes from './pages/bittypes/BitTypes'
+import BitTypeCreate from './pages/bittypes/BitTypeCreate'
+import BitTypeEdit from './pages/bittypes/BitTypeEdit'
 import AnalyticsPage from './pages/AnalyticsPage'
+import AdvancedSearchPage from './pages/AdvancedSearchPage'
+import { useCollectionsStore } from './stores/collectionsStore'
+import Collections from './pages/collections/Collections'
+import CollectionCreate from './pages/collections/CollectionCreate'
+import CollectionView from './pages/collections/CollectionView'
+import CollectionEdit from './pages/collections/CollectionEdit'
 
 function App() {
   const { isLoading: bitsLoading, loadError: bitsError } = useBitsStore()
   const { isLoading: typesLoading, loadError: typesError } = useBitTypesStore()
+  const { isLoading: collectionsLoading, loadError: collectionsError } = useCollectionsStore()
+
   const { settings, initialized, loadSettings } = useSettingsStore()
   const { isLoading, error: shortcutsError, shortcuts, fetchShortcuts } = useShortcutsStore()
   useEffect(() => {
@@ -30,12 +40,14 @@ function App() {
       try {
         await useBitTypesStore.getState().loadBitTypes()
         await useBitsStore.getState().loadBits()
+        await useCollectionsStore.getState().loadCollections()
       } catch (error) {
         console.error('Error loading data:', error)
       }
     }
     fetchData()
   }, [])
+
   useEffect(() => {
     if (!initialized) {
       loadSettings()
@@ -52,7 +64,7 @@ function App() {
     fetchShortcuts()
   }, [fetchShortcuts])
 
-  if (bitsLoading || typesLoading) {
+  if (bitsLoading || typesLoading || collectionsLoading) {
     return (
       <RootLayout>
         <div className="w-full h-full flex flex-col gap-4 items-center justify-center">
@@ -62,18 +74,14 @@ function App() {
       </RootLayout>
     )
   }
-  if (bitsError || typesError) {
+  if (bitsError || typesError || collectionsError) {
     return (
       <RootLayout>
         <div className="w-full h-full flex flex-col gap-2 items-center justify-center">
           <p className="text-md text-red-500">500 Internal Server Error</p>
           <p className="text-text-muted">{(bitsError || typesError)?.message}</p>
           <Button variant={'default'}>
-            <a
-              href="https://github.com/bozbulanik/bits/issues/new/choose"
-              target="_blank"
-              className="flex gap-2 items-center w-full h-full"
-            >
+            <a href="https://github.com/bozbulanik/bits/issues/new/choose" target="_blank" className="flex gap-2 items-center w-full h-full">
               <MessageCircleQuestion size={16} strokeWidth={1.5} />
               Support
             </a>
@@ -109,11 +117,7 @@ function App() {
           <p className="text-md text-red-500">Error</p>
           <p className="text-text-muted">{shortcutsError}</p>
           <Button variant={'default'}>
-            <a
-              href="https://github.com/bozbulanik/bits/issues/new/choose"
-              target="_blank"
-              className="flex gap-2 items-center w-full h-full"
-            >
+            <a href="https://github.com/bozbulanik/bits/issues/new/choose" target="_blank" className="flex gap-2 items-center w-full h-full">
               <MessageCircleQuestion size={16} strokeWidth={1.5} />
               Support
             </a>
@@ -150,6 +154,14 @@ function App() {
           }
         />
         <Route
+          path="/advancedsearch"
+          element={
+            <RootLayout>
+              <AdvancedSearchPage />
+            </RootLayout>
+          }
+        />
+        <Route
           path="/bitviewer/:id"
           element={
             <RootLayout>
@@ -158,15 +170,15 @@ function App() {
           }
         />
         <Route
-          path="/bittypemanager"
+          path="/bittypes"
           element={
             <RootLayout>
-              <BitTypeManager />
+              <BitTypes />
             </RootLayout>
           }
         />
         <Route
-          path="/bittypemanager/create"
+          path="/bittypes/create-type"
           element={
             <RootLayout>
               <BitTypeCreate />
@@ -174,10 +186,35 @@ function App() {
           }
         />
         <Route
-          path="/bittypemanager/edit/:typeId"
+          path="/bittypes/edit-type/:typeId"
           element={
             <RootLayout>
               <BitTypeEdit />
+            </RootLayout>
+          }
+        />
+
+        <Route
+          path="/collections"
+          element={
+            <RootLayout>
+              <Collections />
+            </RootLayout>
+          }
+        />
+        <Route
+          path="/collections/create-collection"
+          element={
+            <RootLayout>
+              <CollectionCreate />
+            </RootLayout>
+          }
+        />
+        <Route
+          path="/collections/edit-collection/:collectionId"
+          element={
+            <RootLayout>
+              <CollectionEdit />
             </RootLayout>
           }
         />

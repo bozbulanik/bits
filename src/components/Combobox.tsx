@@ -18,13 +18,7 @@ interface ToggleButtonProps {
   variant?: 'default' | 'icon' | 'ghost' | 'destructive' | 'tab' | 'selectedTab'
 }
 
-const ToggleButton: React.FC<ToggleButtonProps> = ({
-  options,
-  value,
-  onChange,
-  className,
-  variant
-}) => {
+const ToggleButton: React.FC<ToggleButtonProps> = ({ options, value, onChange, className, variant }) => {
   const currentIndex = options.findIndex((opt) => opt.value === value)
   const current = options[currentIndex]
 
@@ -82,17 +76,7 @@ interface ComboboxProps {
   ghost?: boolean
 }
 
-const Combobox: React.FC<ComboboxProps> = ({
-  selectedValues,
-  options,
-  label,
-  searchable,
-  className,
-  onChange,
-  placeholder,
-  multiSelect,
-  ghost
-}) => {
+const Combobox: React.FC<ComboboxProps> = ({ selectedValues, options, label, searchable, className, onChange, placeholder, multiSelect, ghost }) => {
   const [focusedOption, setFocusedOption] = useState<ComboboxOption | null>()
   const [isItemListOpen, setItemListOpen] = useState<boolean>(false)
   const [optionSearch, setOptionSearch] = useState<string>('')
@@ -101,18 +85,14 @@ const Combobox: React.FC<ComboboxProps> = ({
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   const allOptions = options.flatMap((group) => group.options)
-  const selectedValuesArray = Array.isArray(selectedValues)
-    ? selectedValues
-    : [selectedValues].filter(Boolean)
+  const selectedValuesArray = Array.isArray(selectedValues) ? selectedValues : [selectedValues].filter(Boolean)
 
   const selectedOptions = allOptions.filter((option) => selectedValuesArray.includes(option.value))
 
   // Constant variable of filtered groups based on the search query
   const filteredGroup = options
     .map((group) => {
-      let filteredOptions = group.options.filter((option) =>
-        option.label?.toLowerCase().includes(optionSearch.toLowerCase())
-      )
+      let filteredOptions = group.options.filter((option) => option.label?.toLowerCase().includes(optionSearch.toLowerCase()))
 
       // Sorting logic
       if (optionSort === 'alphaAZ') {
@@ -134,11 +114,7 @@ const Combobox: React.FC<ComboboxProps> = ({
   useEffect(() => {
     // Handles the clicking outside of the item list
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(e.target as Node) &&
-        !buttonRef.current?.contains(e.target as Node)
-      ) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node) && !buttonRef.current?.contains(e.target as Node)) {
         // Close item list, make the focused option null for next time, set search input empty
         setItemListOpen(false)
         setFocusedOption(null)
@@ -185,9 +161,7 @@ const Combobox: React.FC<ComboboxProps> = ({
     if (multiSelect) {
       // Multi-select mode
       const valueIsSelected = selectedValuesArray.includes(value)
-      const newSelectedValues = valueIsSelected
-        ? selectedValuesArray.filter((v) => v !== value)
-        : [...selectedValuesArray, value]
+      const newSelectedValues = valueIsSelected ? selectedValuesArray.filter((v) => v !== value) : [...selectedValuesArray, value]
 
       onChange(newSelectedValues)
       setOptionSearch('')
@@ -236,9 +210,7 @@ const Combobox: React.FC<ComboboxProps> = ({
           <ChevronsUpDown
             size={16}
             strokeWidth={1.5}
-            className={`transition-transform duration-200 ${
-              isItemListOpen ? 'transform rotate-180' : ''
-            }`}
+            className={`transition-transform duration-200 ${isItemListOpen ? 'transform rotate-180' : ''}`}
           />
         </div>
       </Button>
@@ -253,8 +225,9 @@ const Combobox: React.FC<ComboboxProps> = ({
             className="absolute top-9 z-50 w-full bg-scry-bg dark:bg-scry-bg-dark border border-border dark:border-border-dark rounded-md"
           >
             {searchable && (
-              <div className="border-b border-border dark:border-border-dark flex">
+              <div className="border-b border-border dark:border-border-dark flex items-center">
                 <Input
+                  className="flex-1"
                   autoFocus
                   value={optionSearch}
                   onChange={(e) => setOptionSearch(e.target.value)}
@@ -273,9 +246,7 @@ const Combobox: React.FC<ComboboxProps> = ({
             {selectedOptions.length > 0 && multiSelect && (
               <div className="p-1 border-b border-border dark:border-border-dark">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-text-muted2 font-bold uppercase">
-                    Selected ({selectedOptions.length})
-                  </span>
+                  <span className="text-xs text-text-muted2 font-bold uppercase">Selected ({selectedOptions.length})</span>
                   <Button variant="ghost" onClick={handleClearAll}>
                     Clear all
                   </Button>
@@ -283,39 +254,29 @@ const Combobox: React.FC<ComboboxProps> = ({
               </div>
             )}
             <div className="flex flex-col overflow-auto max-h-64 p-1">
-              {filteredGroup.length === 0 && optionSearch ? (
+              {filteredGroup.length === 0 ? (
                 <div className="text-sm text-text-muted">No options found</div>
               ) : (
                 filteredGroup?.map((optionGroup, index) => (
                   <div
                     key={optionGroup.header || index}
-                    className={`${
-                      optionGroup.divider ? 'border-b border-border dark:border-border-dark' : ''
-                    }`}
+                    className={`py-2 ${optionGroup.divider ? 'border-b border-border dark:border-border-dark' : ''}`}
                   >
-                    <p className="font-bold uppercase text-xs text-text-muted2">
-                      {optionGroup.header}
-                    </p>
+                    <p className="font-bold uppercase text-xs text-text-muted2">{optionGroup.header}</p>
                     {optionGroup.options.map((option) => (
                       <div
                         key={option.value}
                         className={`${
                           selectedValuesArray.includes(option.value) ? 'font-medium' : ''
                         } cursor-pointer text-sm w-full flex gap-2  p-0.5 items-center hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark rounded-sm ${
-                          focusedOption?.value == option.value
-                            ? 'bg-button-bg-hover dark:bg-button-bg-hover-dark'
-                            : 'bg-transparent'
+                          focusedOption?.value == option.value ? 'bg-button-bg-hover dark:bg-button-bg-hover-dark' : 'bg-transparent'
                         }`}
                         onMouseEnter={() => setFocusedOption(option)}
                         onClick={() => handleOptionToggle(option.value)}
                       >
                         {option.icon}
                         <div>{highlightMatch(option.label || '', optionSearch)}</div>
-                        <div className="ml-auto">
-                          {selectedValuesArray.includes(option.value) && (
-                            <Check size={16} strokeWidth={1.5} />
-                          )}
-                        </div>
+                        <div className="ml-auto">{selectedValuesArray.includes(option.value) && <Check size={16} strokeWidth={1.5} />}</div>
                       </div>
                     ))}
                   </div>

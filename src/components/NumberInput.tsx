@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Input from './Input'
 import { ChevronDown, ChevronUp, Minus, Plus } from 'lucide-react'
 
@@ -15,15 +15,19 @@ interface NumberInputProps {
   min?: number
   max?: number
   step?: number
+  placeholderValue?: number
+  className?: string
 }
 const NumberInput: React.FC<NumberInputProps> = ({
   value,
   onChange,
   min = Number.MIN_SAFE_INTEGER,
   max = Number.MAX_SAFE_INTEGER,
-  step = 1
+  step = 1,
+  placeholderValue = 0,
+  className
 }) => {
-  const [internalValue, setInternalValue] = useState(value)
+  const [internalValue, setInternalValue] = useState(placeholderValue ? placeholderValue : value)
 
   const updateValue = (newValue: number) => {
     const clamped = Math.min(Math.max(newValue, min), max)
@@ -43,16 +47,21 @@ const NumberInput: React.FC<NumberInputProps> = ({
     if (e.key === 'ArrowUp') increment()
     if (e.key === 'ArrowDown') decrement()
   }
+  useEffect(() => {
+    setInternalValue(value)
+  }, [value])
 
   return (
-    <div className="h-8 p-0.5 flex items-center rounded-md bg-input-bg dark:bg-input-bg-dark hover:bg-input-bg-hover dark:hover:bg-input-bg-hover-dark border border-input-border dark:border-input-border-dark hover:border-input-border-hover dark:hover:border-input-border-hover-dark">
+    <div
+      className={`h-7 p-0.5 flex items-center rounded-md bg-input-bg dark:bg-input-bg-dark hover:bg-input-bg-hover dark:hover:bg-input-bg-hover-dark border border-input-border dark:border-input-border-dark hover:border-input-border-hover dark:hover:border-input-border-hover-dark ${className}`}
+    >
       <div
         onClick={decrement}
         className={`${
           internalValue <= min ? 'cursor-not-allowed' : 'cursor-pointer'
-        } hover:bg-input-border-hover dark:hover:bg-input-border-hover-dark flex items-center justify-center w-6.5 h-6.5 rounded-md`}
+        } hover:bg-input-border-hover dark:hover:bg-input-border-hover-dark flex items-center justify-center w-5 h-5 rounded-md`}
       >
-        <Minus size={14} strokeWidth={1.5} />
+        <Minus size={16} strokeWidth={1.5} />
       </div>
       <Input
         value={internalValue}
@@ -68,9 +77,9 @@ const NumberInput: React.FC<NumberInputProps> = ({
         onClick={increment}
         className={`${
           internalValue >= max ? 'cursor-not-allowed' : 'cursor-pointer'
-        } hover:bg-input-border-hover dark:hover:bg-input-border-hover-dark flex items-center justify-center w-6.5 h-6.5 rounded-md`}
+        } hover:bg-input-border-hover dark:hover:bg-input-border-hover-dark flex items-center justify-center w-5 h-5 rounded-md`}
       >
-        <Plus size={14} strokeWidth={1.5} />
+        <Plus size={16} strokeWidth={1.5} />
       </div>
     </div>
   )

@@ -19,9 +19,7 @@ export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
 export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
-  ? path.join(process.env.APP_ROOT, 'public')
-  : RENDERER_DIST
+process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
 
 let tempWindow: BrowserWindow | null
 let configurationWindow: BrowserWindow | null
@@ -29,9 +27,12 @@ let settingsWindow: BrowserWindow | null
 
 let searchWindow: BrowserWindow | null
 let bitViewerWindow: BrowserWindow | null
-let bitTypeManagerWindow: BrowserWindow | null
+let bitTypesWindow: BrowserWindow | null
+let collectionsWindow: BrowserWindow | null
+
 let calendarWindow: BrowserWindow | null
 let analyticsWindow: BrowserWindow | null
+let advancedSearchWindow: BrowserWindow | null
 let testingWindow: BrowserWindow | null
 
 function createTempWindow() {
@@ -57,7 +58,6 @@ function createTempWindow() {
     tempWindow.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
 }
-
 function createConfigurationWindow() {
   if (configurationWindow) {
     if (VITE_DEV_SERVER_URL) {
@@ -108,7 +108,6 @@ function createConfigurationWindow() {
     configurationWindow.loadFile(path.join(RENDERER_DIST, 'configuration'))
   }
 }
-
 function createSettingsWindow() {
   if (settingsWindow) {
     if (VITE_DEV_SERVER_URL) {
@@ -159,7 +158,6 @@ function createSettingsWindow() {
     settingsWindow.loadFile(path.join(RENDERER_DIST, 'settings/general'))
   }
 }
-
 function createSearchWindow() {
   if (searchWindow) {
     if (VITE_DEV_SERVER_URL) {
@@ -210,7 +208,6 @@ function createSearchWindow() {
     searchWindow.loadFile(path.join(RENDERER_DIST, 'search'))
   }
 }
-
 function createBitViewerWindow(bitId: string) {
   if (bitViewerWindow) {
     if (VITE_DEV_SERVER_URL) {
@@ -261,18 +258,20 @@ function createBitViewerWindow(bitId: string) {
     bitViewerWindow.loadFile(path.join(RENDERER_DIST, `bitviewer/${bitId}`))
   }
 }
+function createBitTypesWindow(type: string, id: string) {
+  const action = type === '' || type === null ? '' : type == 'create' ? '/create-type' : '/edit-type'
+  const parameter = id != '' || id != null || type === 'edit' ? `/${id}` : ''
 
-function createBitTypeManagerWindow() {
-  if (bitTypeManagerWindow) {
+  if (bitTypesWindow) {
     if (VITE_DEV_SERVER_URL) {
-      bitTypeManagerWindow.loadURL(`${VITE_DEV_SERVER_URL}bittypemanager`)
+      bitTypesWindow.loadURL(`${VITE_DEV_SERVER_URL}bittypes${action}${parameter}`)
     } else {
-      bitTypeManagerWindow.loadFile(path.join(RENDERER_DIST, `bittypemanager`))
+      bitTypesWindow.loadFile(path.join(RENDERER_DIST, `bittypes${action}${parameter}`))
     }
     return
   }
-  bitTypeManagerWindow = new BrowserWindow({
-    width: 720,
+  bitTypesWindow = new BrowserWindow({
+    width: 480,
     height: 720,
     resizable: false,
     autoHideMenuBar: true,
@@ -294,25 +293,77 @@ function createBitTypeManagerWindow() {
     }
   })
 
-  bitTypeManagerWindow.on('closed', () => {
-    bitTypeManagerWindow = null
+  bitTypesWindow.on('closed', () => {
+    bitTypesWindow = null
   })
 
-  bitTypeManagerWindow.webContents.setWindowOpenHandler((details) => {
+  bitTypesWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }
   })
 
-  settingsManager.registerWindow(bitTypeManagerWindow)
-  bitDatabaseManager.registerWindow(bitTypeManagerWindow)
+  settingsManager.registerWindow(bitTypesWindow)
+  bitDatabaseManager.registerWindow(bitTypesWindow)
 
   if (VITE_DEV_SERVER_URL) {
-    bitTypeManagerWindow.loadURL(`${VITE_DEV_SERVER_URL}bittypemanager`)
+    bitTypesWindow.loadURL(`${VITE_DEV_SERVER_URL}bittypes${action}${parameter}`)
   } else {
-    bitTypeManagerWindow.loadFile(path.join(RENDERER_DIST, `bittypemanager`))
+    bitTypesWindow.loadFile(path.join(RENDERER_DIST, `bittypes${action}${parameter}`))
   }
 }
+function createCollectionsWindow(type: string, id: string) {
+  const action = type === '' || type === null ? '' : type == 'create' ? '/create-collection' : '/edit-collection'
+  const parameter = id != '' || id != null || type === 'edit' ? `/${id}` : ''
 
+  if (collectionsWindow) {
+    if (VITE_DEV_SERVER_URL) {
+      collectionsWindow.loadURL(`${VITE_DEV_SERVER_URL}collections${action}${parameter}`)
+    } else {
+      collectionsWindow.loadFile(path.join(RENDERER_DIST, `collections${action}${parameter}`))
+    }
+    return
+  }
+  collectionsWindow = new BrowserWindow({
+    width: 480,
+    height: 720,
+    resizable: false,
+    autoHideMenuBar: true,
+    transparent: true,
+    center: true,
+    title: 'Bits | Bit Viewer',
+    frame: false,
+    vibrancy: 'under-window',
+    backgroundMaterial: 'acrylic',
+    visualEffectState: 'active',
+    titleBarStyle: 'hidden',
+    trafficLightPosition: { x: 12, y: 10 },
+
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.mjs'),
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: true
+    }
+  })
+
+  collectionsWindow.on('closed', () => {
+    collectionsWindow = null
+  })
+
+  collectionsWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url)
+    return { action: 'deny' }
+  })
+
+  settingsManager.registerWindow(collectionsWindow)
+  bitDatabaseManager.registerWindow(collectionsWindow)
+
+  if (VITE_DEV_SERVER_URL) {
+    collectionsWindow.loadURL(`${VITE_DEV_SERVER_URL}collections${action}${parameter}`)
+  } else {
+    collectionsWindow.loadFile(path.join(RENDERER_DIST, `collections${action}${parameter}`))
+  }
+}
 function createCalendarWindow() {
   if (calendarWindow) {
     if (VITE_DEV_SERVER_URL) {
@@ -365,7 +416,6 @@ function createCalendarWindow() {
     calendarWindow.loadFile(path.join(RENDERER_DIST, 'calendar/agenda'))
   }
 }
-
 function createAnalyticsWindow() {
   if (analyticsWindow) {
     if (VITE_DEV_SERVER_URL) {
@@ -416,6 +466,56 @@ function createAnalyticsWindow() {
     analyticsWindow.loadFile(path.join(RENDERER_DIST, `analytics`))
   }
 }
+function createAdvancedSearchWindow() {
+  if (advancedSearchWindow) {
+    if (VITE_DEV_SERVER_URL) {
+      advancedSearchWindow.loadURL(`${VITE_DEV_SERVER_URL}advancedsearch`)
+    } else {
+      advancedSearchWindow.loadFile(path.join(RENDERER_DIST, `advancedsearch`))
+    }
+    return
+  }
+  advancedSearchWindow = new BrowserWindow({
+    width: 960,
+    height: 720,
+    resizable: false,
+    autoHideMenuBar: true,
+    transparent: true,
+    center: true,
+    title: 'Bits | Advanced Search',
+    frame: false,
+    vibrancy: 'under-window',
+    backgroundMaterial: 'acrylic',
+    visualEffectState: 'active',
+    titleBarStyle: 'hidden',
+    trafficLightPosition: { x: 12, y: 10 },
+
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.mjs'),
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: true
+    }
+  })
+
+  advancedSearchWindow.on('closed', () => {
+    advancedSearchWindow = null
+  })
+
+  advancedSearchWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url)
+    return { action: 'deny' }
+  })
+
+  settingsManager.registerWindow(advancedSearchWindow)
+  bitDatabaseManager.registerWindow(advancedSearchWindow)
+
+  if (VITE_DEV_SERVER_URL) {
+    advancedSearchWindow.loadURL(`${VITE_DEV_SERVER_URL}advancedsearch`)
+  } else {
+    advancedSearchWindow.loadFile(path.join(RENDERER_DIST, `advancedsearch`))
+  }
+}
 function createTestWindow() {
   if (testingWindow) {
     if (VITE_DEV_SERVER_URL) {
@@ -426,7 +526,7 @@ function createTestWindow() {
     return
   }
   testingWindow = new BrowserWindow({
-    width: 1000,
+    width: 1440,
     height: 800,
     resizable: false,
     autoHideMenuBar: true,
@@ -489,6 +589,11 @@ app.whenReady().then(() => {
     const decodedPath = decodeURIComponent(url)
     callback({ path: decodedPath })
   })
+  protocol.registerFileProtocol('local-file', (request, callback) => {
+    const url = request.url.replace('local-file://', '')
+    const decodedPath = decodeURIComponent(url)
+    callback({ path: decodedPath })
+  })
 
   createTempWindow()
   // createConfigurationWindow()
@@ -516,9 +621,13 @@ function registerShortcutActions() {
     createSearchWindow()
     searchWindow?.focus()
   })
-  shortcutsManager.registerActionHandler('open_bit_type_manager', () => {
-    createBitTypeManagerWindow()
-    bitTypeManagerWindow?.focus()
+  shortcutsManager.registerActionHandler('open_bit_types', () => {
+    createBitTypesWindow('', '')
+    bitTypesWindow?.focus()
+  })
+  shortcutsManager.registerActionHandler('open_collections', () => {
+    createCollectionsWindow('', '')
+    collectionsWindow?.focus()
   })
   shortcutsManager.registerActionHandler('open_calendar', () => {
     createCalendarWindow()
@@ -527,6 +636,10 @@ function registerShortcutActions() {
   shortcutsManager.registerActionHandler('open_analytics', () => {
     createAnalyticsWindow()
     analyticsWindow?.focus()
+  })
+  shortcutsManager.registerActionHandler('open_advanced_search', () => {
+    createAdvancedSearchWindow()
+    advancedSearchWindow?.focus()
   })
 
   shortcutsManager.registerActionHandler('quit_app', () => {
@@ -580,7 +693,7 @@ function registerShortcutHandlers() {
   })
 }
 
-ipcMain.handle('openWindow', async (_, windowName) => {
+ipcMain.handle('openWindow', async (_, windowName, actionType, id) => {
   switch (windowName) {
     case 'search':
       createSearchWindow()
@@ -590,9 +703,17 @@ ipcMain.handle('openWindow', async (_, windowName) => {
       createSettingsWindow()
       settingsWindow?.focus()
       break
-    case 'bittypemanager':
-      createBitTypeManagerWindow()
-      bitTypeManagerWindow?.focus()
+    case 'bitviewer':
+      createBitViewerWindow(id)
+      bitViewerWindow?.focus()
+      break
+    case 'bittypes':
+      createBitTypesWindow(actionType, id)
+      bitTypesWindow?.focus()
+      break
+    case 'collections':
+      createCollectionsWindow(actionType, id)
+      collectionsWindow?.focus()
       break
     case 'calendar':
       createCalendarWindow()
@@ -601,6 +722,10 @@ ipcMain.handle('openWindow', async (_, windowName) => {
     case 'analytics':
       createAnalyticsWindow()
       analyticsWindow?.focus()
+      break
+    case 'advancedsearch':
+      createAdvancedSearchWindow()
+      advancedSearchWindow?.focus()
       break
     default:
       break
@@ -617,14 +742,20 @@ ipcMain.handle('closeWindow', async (_, windowName) => {
     case 'bitviewer':
       bitViewerWindow?.close()
       break
-    case 'bittypemanager':
-      bitTypeManagerWindow?.close()
+    case 'bittypes':
+      bitTypesWindow?.close()
+      break
+    case 'collections':
+      collectionsWindow?.close()
       break
     case 'calendar':
       calendarWindow?.close()
       break
     case 'analytics':
       analyticsWindow?.close()
+      break
+    case 'advancedsearch':
+      advancedSearchWindow?.close()
       break
     default:
       break
@@ -633,6 +764,14 @@ ipcMain.handle('closeWindow', async (_, windowName) => {
 
 ipcMain.on('useProfileImage', (event, filePath) => {
   event.reply('profileImageSet', `local-image://${encodeURIComponent(filePath)}`)
+})
+
+ipcMain.on('useImage', (event, filePath) => {
+  event.reply('imageSet', `local-image://${encodeURIComponent(filePath)}`)
+})
+
+ipcMain.on('useFile', (event, filePath) => {
+  event.reply('fileSet', `local-file://${encodeURIComponent(filePath)}`)
 })
 
 ipcMain.handle('fetchFonts', async () => {
@@ -647,4 +786,14 @@ ipcMain.handle('fetchFonts', async () => {
 ipcMain.handle('openBitViewerWindow', async (_, bitId) => {
   createBitViewerWindow(bitId)
   bitViewerWindow?.focus()
+})
+
+ipcMain.handle('openBitTypeWindow', async (_, type, typeId) => {
+  createBitTypesWindow(type, typeId)
+  bitTypesWindow?.focus()
+})
+
+ipcMain.handle('openCollectionsWindow', async (_, type, id) => {
+  createCollectionsWindow(type, id)
+  collectionsWindow?.focus()
 })

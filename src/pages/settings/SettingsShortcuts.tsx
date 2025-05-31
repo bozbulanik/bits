@@ -49,9 +49,7 @@ const SettingsShortcuts = () => {
 
   const [searchQuery, setSearchQuery] = useState<string>('')
 
-  const filteredShortuts = shortcuts.filter((shortcut) =>
-    shortcut.action.includes(searchQuery.toLocaleLowerCase())
-  )
+  const filteredShortuts = shortcuts.filter((shortcut) => shortcut.action.includes(searchQuery.toLocaleLowerCase()))
 
   const handleReset = async (action: string) => {
     await resetShortcut(action)
@@ -152,7 +150,11 @@ const SettingsShortcuts = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search shortcuts..."
-            leftIcon={<Search size={16} strokeWidth={1.5} />}
+            leftSection={
+              <div className="pl-2 pr-1">
+                <Search size={16} strokeWidth={1.5} />
+              </div>
+            }
           />
           <Button onClick={resetShortcuts} variant={'default'} className="ml-auto">
             <RotateCcw size={16} strokeWidth={1.5} />
@@ -169,10 +171,7 @@ const SettingsShortcuts = () => {
           <div className="overflow-auto divide-y divide-border dark:divide-border-dark">
             {filteredShortuts.length > 0 ? (
               filteredShortuts.map((shortcut, idx) => (
-                <div
-                  key={idx}
-                  className="grid grid-cols-[1fr_1fr_1fr_64px] items-center p-1 gap-4 text-sm"
-                >
+                <div key={idx} className="grid grid-cols-[1fr_1fr_1fr_64px] items-center p-1 gap-4 text-sm">
                   <div className="flex flex-col">
                     <p>{formatActionName(shortcut.action)}</p>
                     <p className="truncate text-xs text-text-muted">{shortcut.description}</p>
@@ -187,11 +186,7 @@ const SettingsShortcuts = () => {
 
                   <div>
                     {shortcut.customKey ? (
-                      <Tooltip
-                        content={shortcut.customKey}
-                        mode="cursor"
-                        offsetPosition={[-16, -32]}
-                      >
+                      <Tooltip content={shortcut.customKey} mode="cursor" offsetPosition={[-16, -32]}>
                         <div className="flex items-center gap-1">
                           {shortcut.customKey.split('+').map((key, idx) => (
                             <KeyCompponent key={idx}>{keyIconMap[key] || key}</KeyCompponent>
@@ -205,47 +200,21 @@ const SettingsShortcuts = () => {
                   <div>
                     {shortcut.customKey ? (
                       <div className="flex gap-2 justify-end mr-2">
-                        <Tooltip
-                          content="Reset shortcut"
-                          mode="fixed"
-                          offsetPosition={[-105, -3]}
-                          delayShow={200}
-                        >
-                          <Button
-                            variant={'iconGhost'}
-                            onClick={() => handleReset(shortcut.action)}
-                          >
+                        <Tooltip content="Reset shortcut" mode="fixed" offsetPosition={[-105, -3]} delayShow={200}>
+                          <Button variant={'iconGhost'} onClick={() => handleReset(shortcut.action)}>
                             <RotateCcw size={16} strokeWidth={1.5} />
                           </Button>
                         </Tooltip>
-                        <Tooltip
-                          content="Change shortcut"
-                          mode="fixed"
-                          offsetPosition={[-120, -3]}
-                          delayShow={200}
-                        >
-                          <Button
-                            className="focus:outline-none"
-                            variant={'iconGhost'}
-                            onClick={() => startRecording(shortcut.action)}
-                          >
+                        <Tooltip content="Change shortcut" mode="fixed" offsetPosition={[-120, -3]} delayShow={200}>
+                          <Button className="focus:outline-none" variant={'iconGhost'} onClick={() => startRecording(shortcut.action)}>
                             <PenLine size={16} strokeWidth={1.5} />
                           </Button>
                         </Tooltip>
                       </div>
                     ) : (
                       <div className="flex gap-2 justify-end mr-2">
-                        <Tooltip
-                          content="Change shortcut"
-                          mode="fixed"
-                          offsetPosition={[-120, -3]}
-                          delayShow={200}
-                        >
-                          <Button
-                            className="focus:outline-none"
-                            variant={'iconGhost'}
-                            onClick={() => startRecording(shortcut.action)}
-                          >
+                        <Tooltip content="Change shortcut" mode="fixed" offsetPosition={[-120, -3]} delayShow={200}>
+                          <Button className="focus:outline-none" variant={'iconGhost'} onClick={() => startRecording(shortcut.action)}>
                             <PenLine size={16} strokeWidth={1.5} />
                           </Button>
                         </Tooltip>

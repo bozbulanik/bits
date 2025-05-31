@@ -9,14 +9,14 @@
   /* --font-font: 'Montserrat', 'sans'; */
   /* Background */
   --color-bg: #fff;
-  --color-bg-dark: #09090b; /* 0a0a0a */ /*09090b*/
+  --color-bg-dark: #0f0f0f; /* 0a0a0a */ /*09090b*/
 
   /* Secondary */
   --color-scry-bg: #f7f6f6;
-  --color-scry-bg-dark: #101011; /*#18181a*/ /*101011*/
+  --color-scry-bg-dark: #161616; /*#18181a*/ /*101011*/
 
   /* Standard Border */
-  --color-border: #dddddd;
+  --color-border: #eee;
   --color-border-dark: #303030; /*#262626*/
 
   --color-scry-border: #939393;
@@ -95,10 +95,17 @@
 
   /* Scrollbar */
   --color-scrollbar-track: #eee;
-  --color-scrollbar-track-dark: #333;
+  --color-scrollbar-track-dark: #555;
 
   --color-scrollbar-thumb: #ccc;
-  --color-scrollbar-thumb-dark: #555;
+  --color-scrollbar-thumb-dark: #333;
+
+  /* Warning */
+  --color-warning-bg: #ffe5be;
+  --color-warning-bg-dark: #25160e;
+
+  --color-warning-border: #fb7f2c;
+  --color-warning-border-dark: #663c15;
 }
 
 @layer base {
@@ -113,23 +120,55 @@
     -webkit-app-region: drag;
   }
   ::-webkit-scrollbar {
-    @apply w-1;
+    @apply w-2;
+    @apply h-3;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-scrollbar-thumb;
+    @apply bg-button-bg;
+    @apply border;
+    @apply rounded-md;
+    @apply border-button-border;
   }
   .dark ::-webkit-scrollbar-thumb {
-    @apply bg-scrollbar-thumb-dark;
+    @apply bg-button-bg-dark;
+    @apply border;
+    @apply rounded-md;
+    @apply border-button-border-dark;
   }
-
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-button-bg-hover;
+    @apply border-button-border-hover;
+    @apply cursor-grab;
+  }
+  ::-webkit-scrollbar-thumb:active {
+    @apply cursor-grabbing;
+  }
+  .dark ::-webkit-scrollbar-thumb:hover {
+    @apply bg-button-bg-hover-dark;
+    @apply border-button-border-hover-dark;
+    @apply cursor-grab;
+  }
+  .dark ::-webkit-scrollbar-thumb:active {
+    @apply cursor-grabbing;
+  }
   ::-webkit-scrollbar-track {
-    @apply bg-scrollbar-track;
+    @apply bg-scry-bg;
   }
   .dark ::-webkit-scrollbar-track {
-    @apply bg-scrollbar-track-dark;
+    @apply bg-scry-bg-dark;
   }
+
   .no-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+
+  ::selection {
+    @apply text-text-dark;
+    @apply bg-bg-dark/50;
+  }
+  .dark ::selection {
+    @apply text-text;
+    @apply bg-bg/50;
   }
   .number-input input[type='number']::-webkit-inner-spin-button,
   .number-input input[type='number']::-webkit-outer-spin-button {

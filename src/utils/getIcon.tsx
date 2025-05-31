@@ -1,19 +1,3 @@
-import {
-  Brackets,
-  Calendar1,
-  Check,
-  File,
-  Hash,
-  Link2,
-  Logs,
-  Mail,
-  Parentheses,
-  Phone,
-  Text,
-  ALargeSmall,
-  Image
-} from 'lucide-react'
-
 import * as Icons from 'lucide-react'
 import { FC } from 'react'
 
@@ -25,30 +9,62 @@ export function getIconComponent(name: string): FC<{ size?: number; strokeWidth?
 export const getPropertyIcon = (type: string) => {
   switch (type) {
     case 'bit':
-      return <Logs size={16} strokeWidth={1.5} />
+      return <Icons.Logs size={16} strokeWidth={1.5} />
     case 'text':
-      return <ALargeSmall size={16} strokeWidth={1.5} />
+      return <Icons.ALargeSmall size={16} strokeWidth={1.5} />
+    case 'document':
+      return <Icons.FileText size={16} strokeWidth={1.5} />
     case 'number':
-      return <Hash size={16} strokeWidth={1.5} />
+      return <Icons.Hash size={16} strokeWidth={1.5} />
     case 'select':
-      return <Parentheses size={16} strokeWidth={1.5} />
+      return <Icons.Parentheses size={16} strokeWidth={1.5} />
     case 'multiselect':
-      return <Brackets size={16} strokeWidth={1.5} />
+      return <Icons.Brackets size={16} strokeWidth={1.5} />
     case 'date':
-      return <Calendar1 size={16} strokeWidth={1.5} />
+      return <Icons.Calendar1 size={16} strokeWidth={1.5} />
     case 'file':
-      return <File size={16} strokeWidth={1.5} />
+      return <Icons.File size={16} strokeWidth={1.5} />
     case 'checkbox':
-      return <Check size={16} strokeWidth={1.5} />
+      return <Icons.Check size={16} strokeWidth={1.5} />
     case 'url':
-      return <Link2 size={16} strokeWidth={1.5} />
+      return <Icons.Link2 size={16} strokeWidth={1.5} />
     case 'email':
-      return <Mail size={16} strokeWidth={1.5} />
+      return <Icons.Mail size={16} strokeWidth={1.5} />
     case 'phone':
-      return <Phone size={16} strokeWidth={1.5} />
+      return <Icons.Phone size={16} strokeWidth={1.5} />
     case 'image':
-      return <Image size={16} strokeWidth={1.5} />
+      return <Icons.Image size={16} strokeWidth={1.5} />
+    case 'currency':
+      return <Icons.Currency size={16} strokeWidth={1.5} />
+    case 'location':
+      return <Icons.MapPin size={16} strokeWidth={1.5} />
+    case 'color':
+      return <Icons.PaintBucket size={16} strokeWidth={1.5} />
+    case 'measurement':
+      return <Icons.Ruler size={16} strokeWidth={1.5} />
+    case 'rating':
+      return <Icons.Star size={16} strokeWidth={1.5} />
+    case 'percentage':
+      return <Icons.Percent size={16} strokeWidth={1.5} />
+    case 'range':
+      return <Icons.SlidersHorizontal size={16} strokeWidth={1.5} />
+    case 'time':
+      return <Icons.Clock size={16} strokeWidth={1.5} />
+    case 'datetime':
+      return <Icons.CalendarClock size={16} strokeWidth={1.5} />
+    case 'language':
+      return <Icons.Languages size={16} strokeWidth={1.5} />
+    case 'country':
+      return <Icons.Earth size={16} strokeWidth={1.5} />
+    case 'timezone':
+      return <Icons.ClockFading size={16} strokeWidth={1.5} />
+    case 'barcode':
+      return <Icons.Barcode size={16} strokeWidth={1.5} />
+    case 'audio':
+      return <Icons.FileAudio size={16} strokeWidth={1.5} />
+    case 'planguage':
+      return <Icons.Code size={16} strokeWidth={1.5} />
     default:
-      return <Text size={16} strokeWidth={1.5} />
+      return <Icons.Text size={16} strokeWidth={1.5} />
   }
 }

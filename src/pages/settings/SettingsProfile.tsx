@@ -89,8 +89,9 @@ const SettingsProfile = () => {
                   }`}
                 >
                   {profileImagePath == '' ? (
-                    <>
-                      <ImagePlus size={48} strokeWidth={1.5} />
+                    <div className="w-full h-full text-center flex flex-col gap-1 items-center justify-center">
+                      <ImagePlus size={32} strokeWidth={1.5} />
+                      <p className="text-sm">Click or drag-drop image here</p>
                       <input
                         type="file"
                         accept="image/*"
@@ -98,7 +99,7 @@ const SettingsProfile = () => {
                         className="hidden"
                         onChange={handleFileChange}
                       />
-                    </>
+                    </div>
                   ) : (
                     <div
                       onClick={handleProfileImageRemoval}

@@ -1,22 +1,13 @@
 import { create } from 'zustand'
-import { BitTypeAnalytics, BitTypeDefinition, BitTypePropertyDefinition } from '../types/Bit'
+import { BitTypeDefinition, BitTypePropertyDefinition } from '../types/Bit'
 
 interface BitTypesStore {
   isLoading: boolean
   loadError: Error | null
   bitTypes: BitTypeDefinition[]
   loadBitTypes: () => Promise<void>
-  addBitType: (
-    name: string,
-    iconName: string,
-    properties: BitTypePropertyDefinition[]
-  ) => Promise<void>
-  updateBitType: (
-    id: string,
-    name: string,
-    iconName: string,
-    properties: BitTypePropertyDefinition[]
-  ) => Promise<void>
+  addBitType: (id: string, name: string, description: string, iconName: string, properties: BitTypePropertyDefinition[]) => Promise<void>
+  updateBitType: (id: string, name: string, description: string, iconName: string, properties: BitTypePropertyDefinition[]) => Promise<void>
   reorderBitTypeProperties: (typeId: string, propertyIds: string[]) => Promise<void>
   deleteBitType: (id: string) => Promise<void>
   getBitTypeById: (id: string) => BitTypeDefinition | undefined
@@ -44,9 +35,7 @@ export const useBitTypesStore = create<BitTypesStore>((set, get) => {
       }
     },
 
-    addBitType: async (name, iconName, properties) => {
-      const id = crypto.randomUUID()
-
+    addBitType: async (id, name, description, iconName, properties) => {
       // Add order property to each property
       const propertiesWithOrder = properties.map((prop, index) => ({
         ...prop,
@@ -57,6 +46,7 @@ export const useBitTypesStore = create<BitTypesStore>((set, get) => {
         id,
         origin: 'user',
         name,
+        description,
         iconName,
         properties: propertiesWithOrder
       }
@@ -64,7 +54,7 @@ export const useBitTypesStore = create<BitTypesStore>((set, get) => {
       set((state) => ({ bitTypes: [...state.bitTypes, newBitType] }))
 
       try {
-        await window.ipcRenderer.invoke('addBitType', id, name, iconName, propertiesWithOrder)
+        await window.ipcRenderer.invoke('addBitType', id, name, description, iconName, propertiesWithOrder)
       } catch (error) {
         console.error('Failed to add bit type:', error)
         set((state) => ({
@@ -74,17 +64,15 @@ export const useBitTypesStore = create<BitTypesStore>((set, get) => {
       }
     },
 
-    updateBitType: async (id, name, iconName, properties) => {
+    updateBitType: async (id, name, description, iconName, properties) => {
       const previousBitTypes = get().bitTypes
 
       set((state) => ({
-        bitTypes: state.bitTypes.map((type) =>
-          type.id === id ? { ...type, name, iconName, properties } : type
-        )
+        bitTypes: state.bitTypes.map((type) => (type.id === id ? { ...type, name, description, iconName, properties } : type))
       }))
 
       try {
-        await window.ipcRenderer.invoke('updateBitType', id, name, iconName, properties)
+        await window.ipcRenderer.invoke('updateBitType', id, name, description, iconName, properties)
       } catch (error) {
         console.error('Failed to update bit type:', error)
         set({
@@ -125,13 +113,7 @@ export const useBitTypesStore = create<BitTypesStore>((set, get) => {
 
       // Send to backend
       try {
-        await window.ipcRenderer.invoke(
-          'updateBitType',
-          typeId,
-          updatedBitType.name,
-          updatedBitType.iconName,
-          reorderedProperties
-        )
+        await window.ipcRenderer.invoke('updateBitType', typeId, updatedBitType.name, updatedBitType.iconName, reorderedProperties)
       } catch (error) {
         console.error('Failed to reorder properties:', error)
         // Revert to previous state

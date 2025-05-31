@@ -18,13 +18,11 @@ interface RangeSelectorPanelProps {
   setCurrentDisplayDateEnd: (date: string) => void
   buttonRef: React.RefObject<HTMLButtonElement>
   includeAllTime?: boolean
+  horizontalAlign: 'left' | 'right'
 }
 
 const RangeSelectorPanel: React.FC<RangeSelectorPanelProps> = ({
-  top,
-  left,
-  right,
-  bottom,
+  horizontalAlign,
   isOpen,
   rangeType,
   toggleRangeSelector,
@@ -96,10 +94,13 @@ const RangeSelectorPanel: React.FC<RangeSelectorPanelProps> = ({
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
           className={twMerge(
-            'absolute p-2 flex items-center rounded-md bg-bg dark:bg-bg-dark border border-border dark:border-border-dark z-50',
+            'absolute p-2 top-12 flex items-center rounded-md bg-bg dark:bg-bg-dark border border-border dark:border-border-dark z-50',
             selectedDateFrom ? 'min-w-148' : 'min-w-74'
           )}
-          style={{ left: `${left}px`, top: `${top}px`, right: `${right}px`, bottom: `${bottom}px` }}
+          style={{
+            left: `${horizontalAlign === 'left' ? '4px' : undefined}`,
+            right: `${horizontalAlign === 'right' ? '4px' : undefined}`
+          }}
         >
           <div className="flex flex-col w-full h-full items-center gap-2">
             <div className="flex justify-between w-full gap-2">
@@ -140,8 +141,8 @@ const RangeSelectorPanel: React.FC<RangeSelectorPanelProps> = ({
               <RangeSelectorComponent
                 initialDate={selectedDateFrom as Date}
                 onDateChange={handleFromDateChange}
-                rangeStartDate={selectedDateFrom as null}
-                rangeEndDate={selectedDateTo as null}
+                rangeStartDate={selectedDateFrom}
+                rangeEndDate={selectedDateTo}
                 isStartSelector={true}
               />
               {selectedDateFrom != null && (
@@ -149,7 +150,7 @@ const RangeSelectorPanel: React.FC<RangeSelectorPanelProps> = ({
                   initialDate={selectedDateTo as Date}
                   onDateChange={handleToDateChange}
                   rangeStartDate={selectedDateFrom}
-                  rangeEndDate={selectedDateTo as null}
+                  rangeEndDate={selectedDateTo}
                   isStartSelector={false}
                 />
               )}

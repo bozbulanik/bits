@@ -4,17 +4,14 @@ import Checkbox from './Checkbox'
 import Input from './Input'
 import Combobox from './Combobox'
 import { getPropertyIcon } from '../utils/getIcon'
+import CalendarInput from './DateInput'
 interface PropertyEditorProps {
   property: BitTypePropertyDefinition
   bitTypeWarningMessage: string
   onChange: (property: BitTypePropertyDefinition) => void
 }
 
-const PropertyEditor: React.FC<PropertyEditorProps> = ({
-  property,
-  bitTypeWarningMessage,
-  onChange
-}) => {
+const PropertyEditor: React.FC<PropertyEditorProps> = ({ property, bitTypeWarningMessage, onChange }) => {
   const handleChange = (field: keyof BitTypePropertyDefinition, value: any) => {
     onChange({
       ...property,
@@ -38,7 +35,7 @@ const PropertyEditor: React.FC<PropertyEditorProps> = ({
         return (
           <Input
             variant={'ghost'}
-            value={property.defaultValue || ''}
+            value={(property.defaultValue as string) || ''}
             onChange={(e) => handleChange('defaultValue', e.target.value)}
             placeholder="Default value"
             className="w-full"
@@ -46,12 +43,12 @@ const PropertyEditor: React.FC<PropertyEditorProps> = ({
         )
       case 'date':
         return (
-          <Input
-            variant={'ghost'}
-            value={property.defaultValue || ''}
-            onChange={(e) => handleChange('defaultValue', e.target.value)}
-            placeholder="YYYY-MM-DD"
+          <CalendarInput
+            ghost
             className="w-full"
+            placeholder="Set date"
+            setCurrentDisplayDate={(e) => handleChange('defaultValue', e)}
+            horizontalAlign="right"
           />
         )
 
@@ -60,7 +57,7 @@ const PropertyEditor: React.FC<PropertyEditorProps> = ({
           <Input
             variant={'ghost'}
             id={`prop-default-${property.id}`}
-            value={property.defaultValue || ''}
+            value={(property.defaultValue as string) || ''}
             onChange={(e) => handleChange('defaultValue', e.target.value)}
             placeholder="Default value"
             className="w-full"
@@ -71,26 +68,25 @@ const PropertyEditor: React.FC<PropertyEditorProps> = ({
   const propertyOptions = [
     {
       options: [
-        { value: 'bit', label: 'Another bit', icon: getPropertyIcon('bit') },
-        { value: 'text', label: 'Text', icon: getPropertyIcon('text') },
-        { value: 'number', label: 'Number', icon: getPropertyIcon('number') },
-        { value: 'select', label: 'Select', icon: getPropertyIcon('select') },
-        { value: 'multiselect', label: 'Multi-select', icon: getPropertyIcon('multiselect') },
-        { value: 'date', label: 'Date', icon: getPropertyIcon('date') },
-        { value: 'file', label: 'File', icon: getPropertyIcon('file') },
-        { value: 'checkbox', label: 'Checkbox', icon: getPropertyIcon('checkbox') },
-        { value: 'url', label: 'URL', icon: getPropertyIcon('url') },
-        { value: 'email', label: 'E-mail', icon: getPropertyIcon('email') },
-        { value: 'phone', label: 'Phone number', icon: getPropertyIcon('phone') },
-        { value: 'image', label: 'Image', icon: getPropertyIcon('image') }
+        { value: 'bit', label: 'Another bit' },
+        { value: 'text', label: 'Text' },
+        { value: 'number', label: 'Number' },
+        { value: 'select', label: 'Select' },
+        { value: 'multiselect', label: 'Multi-select' },
+        { value: 'date', label: 'Date' },
+        { value: 'file', label: 'File' },
+        { value: 'checkbox', label: 'Checkbox' },
+        { value: 'url', label: 'URL' },
+        { value: 'email', label: 'E-mail' },
+        { value: 'phone', label: 'Phone number' },
+        { value: 'image', label: 'Image' }
       ]
     }
   ]
   return (
-    <div className="w-full flex gap-2 items-center">
+    <div className="w-full grid grid-cols-4 gap-2 items-center">
       <Combobox
         ghost
-        className="w-64"
         selectedValues={property.type}
         options={propertyOptions}
         onChange={(e) => handleChange('type', e as BitTypePropertyDefinitionType)}
@@ -103,11 +99,7 @@ const PropertyEditor: React.FC<PropertyEditorProps> = ({
         placeholder="Property name"
       />
       <div>{renderDefaultValueInput()}</div>
-      <Checkbox
-        label="Required"
-        checked={!!property.required}
-        onChange={(checked) => handleChange('required', checked === true)}
-      />
+      <Checkbox label="Required" checked={!!property.required} onChange={(checked) => handleChange('required', checked === true)} />
     </div>
   )
 }

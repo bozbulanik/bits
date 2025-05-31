@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Bit, BitData, BitTypeDefinition } from '../types/Bit'
+import { Bit, BitData, BitTypeDefinition, Note } from '../types/Bit'
 import {
   addDays,
   differenceInCalendarDays,
@@ -38,22 +38,26 @@ interface BitsStore {
   bits: Bit[]
   loadBits: () => Promise<void>
   addBit: (type: BitTypeDefinition, data: BitData[]) => Promise<void>
-  updateBit: (
-    id: string,
-    createdAt: string,
-    updatedAt: string,
-    pinned: number,
-    data: BitData[]
-  ) => Promise<void>
+  addBitNote: (bitId: string, content: string) => Promise<void>
+
+  updateBit: (id: string, data: BitData[]) => Promise<void>
+  updateBitNote: (id: string, bitId: string, content: string) => Promise<void>
+  togglePin: (id: string) => Promise<void>
+
   deleteBit: (id: string) => Promise<void>
+  deleteBitNote: (id: string, bitId: string) => Promise<void>
+
   searchBits: (query: string) => Bit[]
   getBitById: (id: string) => Bit | undefined
+  getPinnedBits: () => Bit[]
+  getBitsByTypeId: (typeId: string) => Bit[]
 
   getDailyAvgAnalytics: (type: string, from: string, to: string) => [number, number] | undefined
   getTotalAvgAnalytics: (type: string, from: string, to: string) => [number, number] | undefined
-  getChartAnalytics: (type: string, from: string, to: string) => [Date, number] | undefined
+  getChartAnalytics: (type: string, from: string, to: string) => { name: Date; count: number }[] | undefined
   getMostUsedTypes: (top: number) => { name: string; count: number }[] | undefined
   getActivityAnalytics: () => { name: Date; count: number }[] | undefined
+  getBitCountByType: (typeId: string) => number
 }
 
 export const useBitsStore = create<BitsStore>((set, get) => {
@@ -85,21 +89,14 @@ export const useBitsStore = create<BitsStore>((set, get) => {
         updatedAt: new Date().toISOString(),
         pinned: 0,
         type,
+        notes: [],
         data
       }
 
       set((state) => ({ bits: [...state.bits, newBit] }))
 
       try {
-        await window.ipcRenderer.invoke(
-          'addBit',
-          newBit.id,
-          newBit.type.id,
-          newBit.createdAt,
-          newBit.updatedAt,
-          newBit.pinned,
-          newBit.data
-        )
+        await window.ipcRenderer.invoke('addBit', newBit.id, newBit.type.id, newBit.createdAt, newBit.updatedAt, newBit.pinned, newBit.data)
       } catch (error) {
         console.error('Failed to add bit:', error)
         set((state) => ({
@@ -108,21 +105,91 @@ export const useBitsStore = create<BitsStore>((set, get) => {
         }))
       }
     },
+    addBitNote: async (bitId, content) => {
+      const originalNotes = get().bits.find((bit) => bit.id === bitId)?.notes || []
 
-    updateBit: async (id, createdAt, updatedAt, pinned, data) => {
+      const newNote: Note = {
+        id: crypto.randomUUID(),
+        bitId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        content
+      }
+
+      set((state) => ({ bits: state.bits.map((bit) => (bit.id === bitId ? { ...bit, notes: [...(bit.notes || []), newNote] } : bit)) }))
+
+      try {
+        await window.ipcRenderer.invoke('addBitNote', newNote)
+      } catch (error) {
+        console.error('Failed to add note:', error)
+        set((state) => ({
+          bits: state.bits.map((bit) =>
+            bit.id === bitId
+              ? {
+                  ...bit,
+                  notes: originalNotes
+                }
+              : bit
+          ),
+          loadError: error as Error
+        }))
+      }
+    },
+
+    updateBit: async (id, data) => {
       const previousBits = get().bits
-      const previousBit = previousBits.find((bit) => bit.id === id)
+      const timeStamp = new Date().toISOString()
 
       set((state) => ({
-        bits: state.bits.map((bit) =>
-          bit.id === id ? { ...bit, createdAt, updatedAt, pinned, data } : bit
-        )
+        bits: state.bits.map((bit) => (bit.id === id ? { ...bit, updatedAt: timeStamp, data } : bit))
       }))
 
       try {
-        await window.ipcRenderer.invoke('updateBit', id, createdAt, updatedAt, pinned, data)
+        await window.ipcRenderer.invoke('updateBit', id, data, timeStamp)
       } catch (error) {
         console.error('Failed to update bit:', error)
+        set({
+          bits: previousBits,
+          loadError: error as Error
+        })
+      }
+    },
+    updateBitNote: async (id, bitId, content) => {
+      const bit = get().bits.find((bit) => bit.id === bitId)
+      const originalNotes = bit?.notes || []
+      const timeStamp = new Date().toISOString()
+      const updatedNotes = originalNotes.map((note) => (note.id === id ? { ...note, updatedAt: timeStamp, content: content } : note))
+
+      set((state) => ({
+        bits: state.bits.map((bit) => (bit.id === bitId ? { ...bit, notes: updatedNotes } : bit))
+      }))
+
+      try {
+        await window.ipcRenderer.invoke('updateBitNote', id, content, timeStamp)
+      } catch (error) {
+        console.error('Failed to update note:', error)
+        set((state) => ({
+          bits: state.bits.map((bit) => (bit.id === bitId ? { ...bit, notes: originalNotes } : bit)),
+          loadError: error as Error
+        }))
+      }
+    },
+    togglePin: async (id) => {
+      const previousBits = get().bits
+
+      const bitToToggle = previousBits.find((bit) => bit.id === id)
+      if (!bitToToggle) return
+
+      const newPinnedValue = bitToToggle.pinned ? 0 : 1
+      const timeStamp = new Date().toISOString()
+
+      set((state) => ({
+        bits: state.bits.map((bit) => (bit.id === id ? { ...bit, updatedAt: timeStamp, pinned: newPinnedValue } : bit))
+      }))
+      try {
+        await window.ipcRenderer.invoke('togglePin', id, newPinnedValue, timeStamp)
+      } catch (error) {
+        console.error('Failed to pin/unpin bit:', error)
         set({
           bits: previousBits,
           loadError: error as Error
@@ -146,14 +213,41 @@ export const useBitsStore = create<BitsStore>((set, get) => {
         })
       }
     },
+    deleteBitNote: async (id, bitId) => {
+      const originalNotes = get().bits.find((bit) => bit.id === bitId)?.notes || []
+
+      const updatedNotes = originalNotes.filter((note) => note.id !== id)
+
+      set((state) => ({
+        bits: state.bits.map((bit) => (bit.id === bitId ? { ...bit, notes: updatedNotes } : bit))
+      }))
+
+      try {
+        await window.ipcRenderer.invoke('deleteBitNote', id)
+      } catch (error) {
+        console.error('Failed to delete note:', error)
+        set((state) => ({
+          bits: state.bits.map((bit) => (bit.id === bitId ? { ...bit, notes: originalNotes } : bit)),
+          loadError: error as Error
+        }))
+      }
+    },
+
     searchBits: (query): Bit[] => {
       const allBits = get().bits
       return allBits.filter((bit) => recursiveSearch(bit, query.toLowerCase()))
     },
-
     getBitById: (id) => {
       const { bits } = get()
       return bits.find((bit: Bit) => bit.id === id)
+    },
+    getPinnedBits: () => {
+      const { bits } = get()
+      return bits.filter((bit: Bit) => bit.pinned === 1)
+    },
+    getBitsByTypeId: (typeId) => {
+      const { bits } = get()
+      return bits.filter((bit: Bit) => typeId == bit.type.id)
     },
 
     getDailyAvgAnalytics: (type, from, to) => {
@@ -213,16 +307,12 @@ export const useBitsStore = create<BitsStore>((set, get) => {
           const toDate = new Date(to)
           const days = Math.max(1, differenceInCalendarDays(toDate, fromDate) + 1)
 
-          const bitsInRange = countByFilter(
-            (bit: any) => bit.date >= fromDate && bit.date <= toDate
-          )
+          const bitsInRange = countByFilter((bit: any) => bit.date >= fromDate && bit.date <= toDate)
           const avgInRange = bitsInRange / days
 
           const prevFrom = subDays(fromDate, days)
           const prevTo = subDays(toDate, days)
-          const bitsPrevRange = countByFilter(
-            (bit: any) => bit.date >= prevFrom && bit.date <= prevTo
-          )
+          const bitsPrevRange = countByFilter((bit: any) => bit.date >= prevFrom && bit.date <= prevTo)
           const avgPrevRange = bitsPrevRange / days
 
           return [avgInRange, percentChange(avgInRange, avgPrevRange)]
@@ -286,14 +376,10 @@ export const useBitsStore = create<BitsStore>((set, get) => {
           const toDate = new Date(to)
           const days = Math.max(1, differenceInCalendarDays(toDate, fromDate) + 1)
 
-          const bitsInRange = countByFilter(
-            (bit: any) => bit.date >= fromDate && bit.date <= toDate
-          )
+          const bitsInRange = countByFilter((bit: any) => bit.date >= fromDate && bit.date <= toDate)
           const prevFrom = subDays(fromDate, days)
           const prevTo = subDays(toDate, days)
-          const bitsPrevRange = countByFilter(
-            (bit: any) => bit.date >= prevFrom && bit.date <= prevTo
-          )
+          const bitsPrevRange = countByFilter((bit: any) => bit.date >= prevFrom && bit.date <= prevTo)
 
           return [bitsInRange, percentChange(bitsInRange, bitsPrevRange)]
         }
@@ -307,7 +393,8 @@ export const useBitsStore = create<BitsStore>((set, get) => {
     },
     getChartAnalytics: (type, from, to) => {
       const allBits = get().bits
-      if (allBits.length == 0) return [new Date(), -1]
+      if (allBits.length == 0) return [{ name: new Date(), count: -1 }]
+
       const allBitsDates = allBits.map((bit) => ({ ...bit, date: new Date(bit.createdAt) }))
 
       const today = startOfToday()
@@ -394,8 +481,8 @@ export const useBitsStore = create<BitsStore>((set, get) => {
       const result = intervals.map((date: any) => {
         const key = getIntervalKey(date)
         return {
-          interval: date,
-          Count: counts.get(key) || 0
+          name: date,
+          count: counts.get(key) || 0
         }
       })
 
@@ -403,15 +490,21 @@ export const useBitsStore = create<BitsStore>((set, get) => {
     },
     getMostUsedTypes: (top: number) => {
       const allBits = get().bits
-      const typeCounts: Record<string, number> = {}
+      const typeCounts: Record<string, { id: string; name: string; count: number }> = {}
+
       for (const bit of allBits) {
-        const typeName = typeof bit.type === 'string' ? bit.type : bit.type.name
-        typeCounts[typeName] = (typeCounts[typeName] || 0) + 1
+        const type = bit.type
+        const typeId = typeof type === 'string' ? type : type.id
+        const typeName = typeof type === 'string' ? type : type.name
+
+        if (!typeCounts[typeId]) {
+          typeCounts[typeId] = { id: typeId, name: typeName, count: 0 }
+        }
+
+        typeCounts[typeId].count += 1
       }
-      const mostUsedTypes = Object.entries(typeCounts)
-        .map(([name, count]) => {
-          return { name: name, count: count }
-        })
+
+      const mostUsedTypes = Object.values(typeCounts)
         .sort((a, b) => b.count - a.count)
         .slice(0, top)
 
@@ -435,6 +528,10 @@ export const useBitsStore = create<BitsStore>((set, get) => {
       })
 
       return hourlyCounts
+    },
+    getBitCountByType: (typeId: string) => {
+      const { bits } = get()
+      return bits.filter((bit) => bit.type.id === typeId).length
     }
   }
 })

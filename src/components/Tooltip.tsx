@@ -74,8 +74,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
     setStyle({ top, left, transform })
   }, [visible])
 
-  const finalStyle =
-    mode === 'cursor' ? { top: coords.y, left: coords.x, transform: 'translate(0, 0)' } : style
+  const finalStyle = mode === 'cursor' ? { top: coords.y, left: coords.x, transform: 'translate(0, 0)' } : style
 
   return (
     <>
@@ -99,7 +98,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.15 }}
-                className="fixed z-100 p-1.5 text-text dark:text-text-dark text-sm bg-scry-bg dark:bg-scry-bg-dark border border-border dark:border-border-dark rounded-md whitespace-nowrap pointer-events-none"
+                className="fixed z-100 p-1.5 max-w-96 whitespace-pre-wrap h-auto text-text dark:text-text-dark text-sm bg-scry-bg dark:bg-scry-bg-dark border border-border dark:border-border-dark rounded-md whitespace-nowrap pointer-events-none"
                 style={finalStyle}
               >
                 {content}

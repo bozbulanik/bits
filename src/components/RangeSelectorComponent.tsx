@@ -16,17 +16,31 @@ import {
   startOfToday,
   setYear,
   isBefore,
-  isWithinInterval
+  isWithinInterval,
+  startOfMonth,
+  endOfWeek,
+  startOfWeek,
+  subMonths
 } from 'date-fns'
 import { twMerge } from 'tailwind-merge'
 import Button from './Button'
 
-const RangeSelectorComponent = ({
+interface RangeSelectorComponentProps {
+  initialDate: Date
+  onDateChange: (day: Date) => void
+  rangeStartDate: Date | null
+  rangeEndDate: Date | null
+  isStartSelector: boolean
+  hasBeenSelected: boolean
+}
+
+const RangeSelectorComponent: React.FC<RangeSelectorComponentProps> = ({
   initialDate = startOfToday(),
   onDateChange = (day: Date) => {},
   rangeStartDate = null,
   rangeEndDate = null,
-  isStartSelector = false
+  isStartSelector = false,
+  hasBeenSelected = false
 }) => {
   const today = startOfToday()
   const [selectedDay, setSelectedDay] = useState(initialDate)
@@ -44,10 +58,13 @@ const RangeSelectorComponent = ({
     }
   }, [initialDate])
 
-  const days = eachDayOfInterval({
-    start: firstDayCurrentMonth,
-    end: endOfMonth(firstDayCurrentMonth)
-  })
+  // Calculate all days to display in the calendar view
+  const firstDayOfCurrentMonth = startOfMonth(firstDayCurrentMonth)
+  const startDate = startOfWeek(firstDayOfCurrentMonth)
+  const endDate = endOfWeek(endOfMonth(firstDayCurrentMonth))
+
+  // Get all days from the start of the first week to the end of the last week
+  const calendarDays = eachDayOfInterval({ start: startDate, end: endDate })
 
   const previousMonth = () => {
     let firstDayNextMonth = add(firstDayCurrentMonth, { months: -1 })
@@ -64,20 +81,7 @@ const RangeSelectorComponent = ({
     setSelectorView('month')
   }
 
-  const months = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December'
-  ]
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
   const selectMonth = (monthIndex: any) => {
     const newDate = new Date(currentYear, monthIndex, 1)
@@ -140,8 +144,13 @@ const RangeSelectorComponent = ({
     // If this is the end selector, only dates after start date are selectable
     return !rangeStartDate || !isBefore(day, rangeStartDate)
   }
+
   return (
-    <div className="flex gap-2 border border-border dark:border-border-dark rounded-md flex-col relative">
+    <div
+      className={`text-text dark:text-text-dark flex gap-2 border rounded-md flex-col relative border-border dark:border-border-dark transition-color duration-300 ease-in-out ${
+        hasBeenSelected ? 'bg-scry-bg dark:bg-scry-bg-dark' : 'bg-bg dark:bg-bg-dark'
+      }`}
+    >
       <div className="flex items-center w-full justify-between p-2">
         <Button variant={'icon'} onClick={previousMonth}>
           <ArrowLeft size={16} strokeWidth={1.5} />
@@ -158,15 +167,14 @@ const RangeSelectorComponent = ({
         <div className="absolute w-full h-full bg-bg dark:bg-bg-dark rounded-md z-10 ">
           {selectorView === 'month' ? (
             <>
-              <div className="grid grid-cols-3 w-full h-full">
+              <div className="grid grid-cols-3 w-full h-full p-2">
                 {months.map((month, i) => (
                   <button
                     key={month}
                     onClick={() => selectMonth(i)}
                     className={twMerge(
                       'p-2 rounded-md hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark cursor-pointer',
-                      firstDayCurrentMonth.getMonth() === i &&
-                        'bg-blue-500 font-semibold text-white hover:text-black'
+                      firstDayCurrentMonth.getMonth() === i && 'bg-blue-500 font-semibold text-white hover:text-black'
                     )}
                   >
                     <p className="text-sm">{month.substring(0, 3)}</p>
@@ -187,15 +195,14 @@ const RangeSelectorComponent = ({
                   <ArrowRight size={16} strokeWidth={1.5} />
                 </Button>
               </div>
-              <div className="grid grid-cols-3 w-full h-full">
+              <div className="grid grid-cols-3 w-full h-full p-2">
                 {years.map((year) => (
                   <button
                     key={year}
                     onClick={() => selectYear(year)}
                     className={twMerge(
                       'p-2 rounded-md hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark cursor-pointer',
-                      currentYear === year &&
-                        'bg-blue-500 font-semibold text-white hover:text-black'
+                      currentYear === year && 'bg-blue-500 font-semibold text-white hover:text-black'
                     )}
                   >
                     <p className="text-sm">{year}</p>
@@ -218,58 +225,45 @@ const RangeSelectorComponent = ({
           <div>S</div>
         </div>
         <div className="grid grid-cols-7">
-          {days.map((day, index) => {
+          {calendarDays.map((day, index) => {
             const isSelectable = isDateSelectable(day)
+            const isOutsideCurrentMonth = !isSameMonth(day, firstDayCurrentMonth)
+
             return (
-              <div
-                key={index}
-                className={twMerge(index === 0 && colStartClasses[getDay(day)], 'p-1.5')}
-              >
+              <div key={index} className="w-10 h-10">
                 <button
                   type="button"
                   onClick={() => isSelectable && handleDaySelect(day)}
-                  disabled={!isSelectable}
+                  disabled={!isSelectable || isOutsideCurrentMonth}
                   className={twMerge(
                     // Base styling
-                    'flex w-8 h-8 items-center justify-center rounded-sm',
+                    'w-full h-full flex items-center justify-center ',
 
                     // Range styling - applied first as base
                     isInRange(day) && 'bg-blue-100 dark:bg-blue-900/30',
-                    isRangeStart(day) && 'bg-blue-300 dark:bg-blue-500 text-text-dark rounded-l-sm',
-                    isRangeEnd(day) && 'bg-blue-500 dark:bg-blue-900 text-text-dark rounded-r-sm',
+                    isRangeStart(day) && 'bg-blue-300 dark:bg-blue-500 text-text-dark rounded-l-xl',
+                    isRangeEnd(day) && 'bg-blue-500 dark:bg-blue-900 text-text-dark rounded-r-xl',
 
                     // Selected day styling
-                    isEqual(day, selectedDay) &&
-                      !isRangeStart(day) &&
-                      !isRangeEnd(day) &&
-                      'bg-blue-500 dark:bg-blue-900 text-text-dark',
+                    isEqual(day, selectedDay) && !isRangeStart(day) && !isRangeEnd(day) && 'bg-blue-500 dark:bg-blue-900 text-text-dark',
 
                     // Today styling
-                    !isEqual(day, selectedDay) &&
-                      isToday(day) &&
-                      !isInRange(day) &&
-                      'bg-red-500/20 border border-red-500',
+                    !isEqual(day, selectedDay) && isToday(day) && !isInRange(day) && 'bg-red-500/20 border border-red-500 rounded-md',
 
-                    // Month styling
-                    !isEqual(day, selectedDay) &&
-                      !isToday(day) &&
-                      !isSameMonth(day, firstDayCurrentMonth) &&
-                      'text-text-muted/50',
+                    // Outside current month styling (ghost days)
+                    isOutsideCurrentMonth && 'text-text-muted/40',
 
                     // Hover styling
                     isSelectable &&
                       !isEqual(day, selectedDay) &&
-                      'hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark cursor-pointer',
+                      !isOutsideCurrentMonth &&
+                      'hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark cursor-pointer hover:rounded-md',
 
                     // Font styling
-                    (isEqual(day, selectedDay) ||
-                      isToday(day) ||
-                      isRangeStart(day) ||
-                      isRangeEnd(day)) &&
-                      'font-semibold',
+                    (isEqual(day, selectedDay) || isToday(day) || isRangeStart(day) || isRangeEnd(day)) && 'font-semibold',
 
                     // Disabled styling
-                    !isSelectable && 'opacity-50 cursor-not-allowed'
+                    (!isSelectable || isOutsideCurrentMonth) && 'opacity-50 cursor-not-allowed'
                   )}
                 >
                   <time dateTime={format(day, 'yyyy-MM-dd')}>{format(day, 'd')}</time>
@@ -285,12 +279,4 @@ const RangeSelectorComponent = ({
 
 export default RangeSelectorComponent
 
-let colStartClasses = [
-  '',
-  'col-start-2',
-  'col-start-3',
-  'col-start-4',
-  'col-start-5',
-  'col-start-6',
-  'col-start-7'
-]
+let colStartClasses = ['', 'col-start-2', 'col-start-3', 'col-start-4', 'col-start-5', 'col-start-6', 'col-start-7']
