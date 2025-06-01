@@ -20,7 +20,7 @@ class BitDatabaseManager {
     }
   }
 
-  // --- BITS ---
+  //#region BITS
   // -- READ --
   async getStructuredBits(): Promise<Bit[]> {
     try {
@@ -225,8 +225,70 @@ class BitDatabaseManager {
       })
     })
   }
-  //------------------------------------------------------------------------------------------------------------------------------
-  // --- TYPES ---
+
+  async getPinnedBits() {
+    return new Promise((resolve, reject) => {
+      db.all('SELECT * FROM bits WHERE pinned = 1', [], (err: string, rows: []) => {
+        if (err) reject(err)
+        else resolve(rows)
+      })
+    })
+  }
+  async getStructuredPinnedBits() {
+    try {
+      if (this.cachedBitTypes.length === 0) {
+        await this.getStructuredBitTypes()
+      }
+
+      const bitRows: any[] = (await this.getPinnedBits()) as any[]
+      const structuredBits = await Promise.all(
+        bitRows.map(async (bit) => {
+          const bitDataRows = (await this.getBitDataById(bit.id)) as any[]
+          const bitNoteRows = (await this.getBitNotesById(bit.id)) as any[]
+          const type = this.cachedBitTypes.find((t) => t.id === bit.type_id)
+
+          const formattedData = bitDataRows.map(
+            (data) =>
+              ({
+                bitId: data.bit_id,
+                propertyId: data.property_id,
+                value: data.value
+              } as BitData)
+          )
+
+          const formattedNotes = bitNoteRows.map(
+            (note) =>
+              ({
+                id: note.id,
+                bitId: note.bit_id,
+                createdAt: note.created_at,
+                updatedAt: note.updated_at,
+                content: note.content
+              } as Note)
+          )
+
+          return {
+            id: bit.id,
+            type,
+            createdAt: bit.created_at,
+            updatedAt: bit.updated_at,
+            pinned: bit.pinned,
+            data: formattedData,
+            notes: formattedNotes
+          } as Bit
+        })
+      )
+
+      // Filter out null entries (from unknown type IDs)
+      return structuredBits.filter(Boolean) as Bit[]
+    } catch (error) {
+      console.error('Error getting pinned bits:', error)
+      throw error
+    }
+  }
+  //#endregion
+
+  //#region TYPES
   async getStructuredBitTypes(): Promise<BitTypeDefinition[]> {
     try {
       const bitTypeRows: any[] = (await this.getBitTypes()) as any[]
@@ -416,8 +478,9 @@ class BitDatabaseManager {
       // })
     })
   }
+  //#endregion
 
-  // --- COLLECTIONS ---
+  //#region COLLECTIONS
   async getCollections() {
     return new Promise((resolve, reject) => {
       db.all('SELECT * FROM collections', [], (err: string, rows: []) => {
@@ -566,8 +629,9 @@ class BitDatabaseManager {
       })
     })
   }
+  //#endregion
 
-  // --- BROADCASTING ---
+  //#region BROADCASTING
   private async broadcastBitUpdate(): Promise<void> {
     try {
       const structuredBits = await this.getStructuredBits()
@@ -604,9 +668,11 @@ class BitDatabaseManager {
       console.error('Error broadcasting collections update:', error)
     }
   }
+  //#endregion
 
-  // --- IPC HANDLERS ---
+  //#region IPC HANDLERS
   setupIpcHandlers() {
+    //#region BITS
     ipcMain.handle('getStructuredBits', async () => {
       return await this.getStructuredBits()
     })
@@ -663,7 +729,12 @@ class BitDatabaseManager {
       return result
     })
 
-    // --- TYPES ---
+    ipcMain.handle('getStructuredPinnedBits', async () => {
+      return await this.getStructuredPinnedBits()
+    })
+    //#endregion
+
+    //#region TYPES
 
     ipcMain.handle('getStructuredBitTypes', async () => {
       return await this.getStructuredBitTypes()
@@ -703,8 +774,9 @@ class BitDatabaseManager {
       await this.broadcastCollectionsUpdate()
       return result
     })
+    //#endregion
 
-    // --- COLLECTIONS ---
+    //#region COLLECTIONS
 
     ipcMain.handle('getStructuredCollections', async () => {
       return await this.getStructuredCollections()
@@ -730,7 +802,9 @@ class BitDatabaseManager {
       await this.broadcastCollectionsUpdate()
       return result
     })
+    //#endregion
   }
+  //#endregion
 }
 
 export const bitDatabaseManager = new BitDatabaseManager()

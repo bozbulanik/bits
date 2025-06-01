@@ -127,7 +127,10 @@ const Collections = () => {
                   onMouseLeave={() => setHoveredCollectionId(null)}
                   className="bg-scry-bg dark:bg-scry-bg-dark border border-transparent hover:border-button-border dark:hover:border-button-border-dark flex items-center gap-2 cursor-pointer rounded-md"
                 >
-                  <div onClick={() => navigate(`/collections/edit-collection/${collection.id}`)} className="p-2 w-full flex items-center gap-2">
+                  <div
+                    onClick={() => window.ipcRenderer.invoke('openWindow', 'collections', 'view', collection.id, 720, 720)}
+                    className="p-2 w-full flex items-center gap-2"
+                  >
                     <div className="bg-bg-hover dark:bg-bg-hover-dark p-2 rounded-md">
                       {collection.iconName ? (
                         (() => {

@@ -14,6 +14,7 @@ import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } 
 import { CSS } from '@dnd-kit/utilities'
 import { closestCenter, DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import { AnimatePresence, motion } from 'framer-motion'
 
 function PropertyItem({
   id,
@@ -98,29 +99,31 @@ const BitTypeCreate = () => {
   const [properties, setProperties] = useState<BitTypePropertyDefinition[]>([])
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>('')
 
-  const [bitTypeWarningMessage, setBitTypeWarningMessage] = useState<string>('')
+  const [bitTypeNameWarning, setBitTypeNameWarning] = useState<string>('')
+  const [bitTypeIconNameWarning, setBitTypeIconNameWarning] = useState<string>('')
+  const [bitTypePropertyWarning, setBitTypePropertyWarning] = useState<string>('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) {
-      setBitTypeWarningMessage('Type name is required.')
+      setBitTypeNameWarning('Type name is required.')
       return
+    } else {
+      setBitTypeNameWarning('')
     }
     if (!iconName.trim()) {
-      setBitTypeWarningMessage('Type icon is required.')
+      setBitTypeIconNameWarning('Type icon is required.')
       return
+    } else {
+      setBitTypeIconNameWarning('')
     }
     if (properties?.length === 0) {
-      setBitTypeWarningMessage('At least one property is required.')
+      setBitTypePropertyWarning('At least one property is required.')
       return
-    }
-    const propWithNoName = properties.find((p) => p.name == '')
-    if (propWithNoName) {
-      setBitTypeWarningMessage('Property name is required.')
-      return
+    } else {
+      setBitTypePropertyWarning('')
     }
 
-    setBitTypeWarningMessage('')
     const id = crypto.randomUUID()
     try {
       await addBitType(id, name, description, iconName, properties)
@@ -239,12 +242,49 @@ const BitTypeCreate = () => {
 
     setProperties(updatedItems)
   }
+
+  const [isUnsavedChangesPanelOpen, setIsUnsavedChangesPanelOpen] = useState<boolean>(false)
+  const handleBack = () => {
+    if (name == '' && iconName == '' && properties.length == 0) {
+      navigate('/bittypes')
+    } else {
+      setIsUnsavedChangesPanelOpen(true)
+    }
+  }
   switch (view) {
     case 'mainView':
       return (
         <div className="w-full h-full flex flex-col">
+          <AnimatePresence>
+            {isUnsavedChangesPanelOpen && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="absolute w-full h-full pointer-events-auto z-50 backdrop-blur-xs bg-bg/75 dark:bg-bg-dark/75"
+              >
+                <div className="absolute w-96 top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%] border border-border dark:border-border-dark bg-bg dark:bg-bg-dark rounded-md flex flex-col items-center">
+                  <div className="flex flex-col pb-2 px-4 pt-4 w-full">
+                    <p className="font-semibold">Unsaved changes</p>
+                  </div>
+                  <div className="px-4 pb-2 w-full">
+                    <p className="text-sm">You have unsaved changes. Are you sure want to leave this page and discard your changes?</p>
+                  </div>
+                  <div className="flex gap-2 items-center w-full p-2">
+                    <Button onClick={() => setIsUnsavedChangesPanelOpen(false)} className="ml-auto" variant={'ghost'}>
+                      Cancel
+                    </Button>
+                    <Button onClick={() => navigate('/bittypes')} variant={'destructive'}>
+                      Discard changes
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           <div className=" flex items-center p-2 gap-2">
-            <Button onClick={() => navigate('/bittypes')} variant={'iconGhost'}>
+            <Button onClick={handleBack} variant={'iconGhost'}>
               <ChevronLeft size={16} strokeWidth={1.5} />
             </Button>
             <div className="flex-1 h-full flex items-center drag-bar">
@@ -260,22 +300,23 @@ const BitTypeCreate = () => {
               <div className="flex flex-col gap-2">
                 <p className="text-text-muted font-semibold uppercase text-sm">Details</p>
                 <div className="relative flex flex-col gap-1">
-                  <p className="text-sm font-semibold text-text-muted">Type Icon</p>
+                  <div className="flex items-center">
+                    <p className="text-sm font-semibold text-text-muted">Type Icon</p>
+                    {bitTypeIconNameWarning != '' && <p className="ml-auto text-sm text-red-600">{bitTypeIconNameWarning}</p>}
+                  </div>
                   <div
                     ref={iconButtonRef}
                     onMouseEnter={() => setTypeIconHovered(true)}
                     onMouseLeave={() => setTypeIconHovered(false)}
                     onClick={() => setIsPickerOpen(!isPickerOpen)}
-                    className={`text-text-muted relative p-1 cursor-pointer h-16 w-full border border-dashed border-border-dark/25 dark:border-border/25 rounded-md flex items-center justify-center `}
+                    className={`text-text-muted relative p-1 cursor-pointer h-16 w-full border border-dashed rounded-md flex items-center justify-center ${
+                      bitTypeIconNameWarning != '' ? 'border-red-500/50' : 'border-border-dark/25 dark:border-border/25 '
+                    }`}
                   >
                     {iconName != '' ? IconComponent && <IconComponent size={28} strokeWidth={1.5} /> : <Image size={28} strokeWidth={1.5} />}
                     {typeIconHovered && (
                       <div
-                        className={`absolute top-0 left-0 w-full h-full flex items-center justify-center rounded-md ${
-                          iconName == '' && bitTypeWarningMessage
-                            ? 'bg-input-bg-error dark:bg-input-bg-error-dark '
-                            : 'bg-button-bg dark:bg-button-bg-dark '
-                        }`}
+                        className={`absolute top-0 left-0 w-full h-full flex items-center justify-center rounded-md bg-button-bg dark:bg-button-bg-dark`}
                       >
                         <ImagePlus size={28} strokeWidth={1.5} />
                       </div>
@@ -292,8 +333,16 @@ const BitTypeCreate = () => {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <p className="text-sm font-semibold text-text-muted">Type Name</p>
-                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter name..." />
+                  <div className="flex items-center">
+                    <p className="text-sm font-semibold text-text-muted">Type Name</p>
+                    {bitTypeNameWarning != '' && <p className="ml-auto text-sm text-red-600">{bitTypeNameWarning}</p>}
+                  </div>
+                  <Input
+                    variant={bitTypeNameWarning != '' ? 'error' : 'default'}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter name..."
+                  />
                 </div>
                 <div className="flex flex-col gap-1">
                   <p className="text-sm font-semibold text-text-muted">Description (optional)</p>
@@ -309,7 +358,10 @@ const BitTypeCreate = () => {
             </div>
 
             <div className="p-2 flex flex-col gap-2 overflow-auto">
-              <p className="text-text-muted font-semibold uppercase text-sm">Properties</p>
+              <div className="flex items-center">
+                <p className="text-text-muted font-semibold uppercase text-sm">Properties</p>
+                {bitTypePropertyWarning != '' && <p className="ml-auto text-sm text-red-600">{bitTypePropertyWarning}</p>}
+              </div>
               <Button onClick={() => setView('addProperty')} variant={'ghost'} className="bg-scry-bg dark:bg-scry-bg-dark">
                 <Plus size={16} strokeWidth={1.5} />
                 Add property

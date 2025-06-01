@@ -6,7 +6,6 @@ import SearchPage from './pages/SearchPage'
 import { useEffect } from 'react'
 import { useSettingsStore } from './stores/settingsStore'
 import { PulseLoader } from 'react-spinners'
-import TestingPage from './pages/TestingPage'
 import ConfigurationWizard from './pages/configuration/ConfigurationWizard'
 import { useBitTypesStore } from './stores/bitTypesStore'
 import { useBitsStore } from './stores/bitsStore'
@@ -26,7 +25,7 @@ import { useCollectionsStore } from './stores/collectionsStore'
 import Collections from './pages/collections/Collections'
 import CollectionCreate from './pages/collections/CollectionCreate'
 import CollectionView from './pages/collections/CollectionView'
-import CollectionEdit from './pages/collections/CollectionEdit'
+import TestingPage from './pages/TestingPage'
 
 function App() {
   const { isLoading: bitsLoading, loadError: bitsError } = useBitsStore()
@@ -211,10 +210,10 @@ function App() {
           }
         />
         <Route
-          path="/collections/edit-collection/:collectionId"
+          path="/collections/view-collection/:collectionId"
           element={
             <RootLayout>
-              <CollectionEdit />
+              <CollectionView />
             </RootLayout>
           }
         />

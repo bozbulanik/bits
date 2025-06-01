@@ -4,16 +4,26 @@ import Input from '../components/Input'
 import { BrushCleaning, Search, X } from 'lucide-react'
 import { clearBitsHistory, getBitIdsFromHistory } from '../utils/searchHistory'
 import { useBitsStore } from '../stores/bitsStore'
+import { Bit } from '../types/Bit'
 
 const SearchPage = () => {
-  const { getBitById, getPinnedBits } = useBitsStore()
+  const { getBitById } = useBitsStore()
   const [searchQuery, setSearchQuery] = useState<string>('')
 
-  const pinnedBits = getPinnedBits()
   const [recentlyOpenedBitIds, setRecentlyOpenedBitIds] = useState<string[]>([])
   useEffect(() => {
     const history = getBitIdsFromHistory()
     setRecentlyOpenedBitIds(history)
+  }, [])
+
+  const [pinnedBits, setPinnedBits] = useState<Bit[]>([])
+
+  useEffect(() => {
+    const fetchAll = async () => {
+      const data = await window.ipcRenderer.invoke('getStructuredPinnedBits')
+      setPinnedBits(data)
+    }
+    fetchAll()
   }, [])
 
   return (

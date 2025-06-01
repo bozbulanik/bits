@@ -161,7 +161,6 @@ const CollectionCreate = () => {
     }
 
     setCollectionWarningMessage('')
-    console.log(currentCollectionItems)
     try {
       await addCollection(name, iconName, currentCollectionItems)
       navigate('/collections')

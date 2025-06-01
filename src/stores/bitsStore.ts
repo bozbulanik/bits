@@ -58,6 +58,9 @@ interface BitsStore {
   getMostUsedTypes: (top: number) => { name: string; count: number }[] | undefined
   getActivityAnalytics: () => { name: Date; count: number }[] | undefined
   getBitCountByType: (typeId: string) => number
+
+  pinnedBits: Bit[]
+  getPinnedBitsDB: () => Promise<void>
 }
 
 export const useBitsStore = create<BitsStore>((set, get) => {
@@ -532,6 +535,16 @@ export const useBitsStore = create<BitsStore>((set, get) => {
     getBitCountByType: (typeId: string) => {
       const { bits } = get()
       return bits.filter((bit) => bit.type.id === typeId).length
+    },
+
+    pinnedBits: [],
+    getPinnedBitsDB: async () => {
+      try {
+        const structuredPinnedBits = await window.ipcRenderer.invoke('getStructuredPinnedBits')
+        set({ pinnedBits: structuredPinnedBits })
+      } catch (err) {
+        console.error('Failed to fetch bits', err)
+      }
     }
   }
 })

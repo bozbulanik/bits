@@ -36,6 +36,7 @@ import {
 } from '../../utils/getMeasurements'
 import TimeInput from '../../components/TimeInput'
 import DateTimeComponent from '../../components/DateTimeComponent'
+import { AnimatePresence, motion } from 'framer-motion'
 
 function SortableItem({ id, onRemove }: { id: string; onRemove: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id })
@@ -907,7 +908,34 @@ const PropertyPage: React.FC<PropertyPageProps> = ({ mode, setView, handleAddPro
   }
   const sensors = useSensors(useSensor(PointerSensor))
 
-  const handleSubmit = () => {
+  const [propertyNameWarning, setPropertyNameWarning] = useState('')
+  const [propertyOptionsWarning, setPropertyOptionsWarning] = useState('')
+  const [propertyOptionsRangedWarning, setPropertyOptionsRangedWarning] = useState('')
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!currentPropName.trim()) {
+      setPropertyNameWarning('Property name is required.')
+      return
+    } else {
+      setPropertyNameWarning('')
+    }
+
+    if ((currentPropType == 'select' || currentPropType == 'multiselect') && currentPropOptions.length == 0) {
+      setPropertyOptionsWarning('At least one option is required.')
+      return
+    } else {
+      setPropertyOptionsWarning('')
+    }
+
+    if ((currentPropType == 'rating' || currentPropType == 'range') && currentPropOptions.length == 0) {
+      setPropertyOptionsRangedWarning('A full range is required.')
+      return
+    } else {
+      setPropertyOptionsRangedWarning('')
+    }
+
     if (mode === 'edit' && handleUpdateProperty && selectedProperty) {
       const newProperty: BitTypePropertyDefinition = {
         id: selectedProperty.id,
@@ -931,21 +959,63 @@ const PropertyPage: React.FC<PropertyPageProps> = ({ mode, setView, handleAddPro
     setPropOptionName('')
     setView('mainView')
   }
+  const [isUnsavedChangesPanelOpen, setIsUnsavedChangesPanelOpen] = useState<boolean>(false)
+  const handleBack = () => {
+    if (currentPropName == '' && currentPropDV == undefined) {
+      setView('mainView')
+      setCurrentPropName('')
+      setCurrentPropType('text')
+      setCurrentPropRequired(false)
+      setCurrentPropOptions([])
+      setCurrentPropDV('')
+      setPropOptionName('')
+    } else {
+      setIsUnsavedChangesPanelOpen(true)
+    }
+  }
   return (
     <div className="w-full h-full flex flex-col">
+      <AnimatePresence>
+        {isUnsavedChangesPanelOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="absolute w-full h-full pointer-events-auto z-50 backdrop-blur-xs bg-bg/75 dark:bg-bg-dark/75"
+          >
+            <div className="absolute w-96 top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%] border border-border dark:border-border-dark bg-bg dark:bg-bg-dark rounded-md flex flex-col items-center">
+              <div className="flex flex-col pb-2 px-4 pt-4 w-full">
+                <p className="font-semibold">Unsaved changes</p>
+              </div>
+              <div className="px-4 pb-2 w-full">
+                <p className="text-sm">You have unsaved changes. Are you sure want to leave this page and discard your changes?</p>
+              </div>
+              <div className="flex gap-2 items-center w-full p-2">
+                <Button onClick={() => setIsUnsavedChangesPanelOpen(false)} className="ml-auto" variant={'ghost'}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    setView('mainView')
+                    setCurrentPropName('')
+                    setCurrentPropType('text')
+                    setCurrentPropRequired(false)
+                    setCurrentPropOptions([])
+                    setCurrentPropDV('')
+                    setPropOptionName('')
+                  }}
+                  variant={'destructive'}
+                >
+                  Discard changes
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className=" flex items-center p-2 gap-2">
-        <Button
-          onClick={() => {
-            setView('mainView')
-            setCurrentPropName('')
-            setCurrentPropType('text')
-            setCurrentPropRequired(false)
-            setCurrentPropOptions([])
-            setCurrentPropDV('')
-            setPropOptionName('')
-          }}
-          variant={'iconGhost'}
-        >
+        <Button onClick={handleBack} variant={'iconGhost'}>
           <ChevronLeft size={16} strokeWidth={1.5} />
         </Button>
         <div className="flex-1 h-full flex items-center drag-bar">
@@ -973,7 +1043,10 @@ const PropertyPage: React.FC<PropertyPageProps> = ({ mode, setView, handleAddPro
           />
         </div>
         <div className="flex flex-col gap-1">
-          <p className="text-text-muted text-sm font-semibold">Property Name</p>
+          <div className="flex items-center">
+            <p className="text-text-muted text-sm font-semibold">Property Name</p>
+            {propertyNameWarning != '' && <p className="ml-auto text-sm text-red-600">{propertyNameWarning}</p>}
+          </div>
           <Input ref={currentPropNameRef} value={currentPropName} onChange={(e) => setCurrentPropName(e.target.value)} placeholder="Enter name..." />
         </div>
         <div className="flex flex-col gap-1">
@@ -991,7 +1064,10 @@ const PropertyPage: React.FC<PropertyPageProps> = ({ mode, setView, handleAddPro
         </div>
         {(currentPropType === 'select' || currentPropType === 'multiselect') && (
           <div className="flex flex-col gap-1 max-h-48">
-            <p className="text-text-muted text-sm font-semibold">Options</p>
+            <div className="flex items-center">
+              <p className="text-text-muted text-sm font-semibold">Options</p>
+              {propertyOptionsWarning != '' && <p className="ml-auto text-sm text-red-600">{propertyOptionsWarning}</p>}
+            </div>
 
             <div className="flex flex-col gap-2 h-full min-h-0">
               <Input
@@ -1030,13 +1106,10 @@ const PropertyPage: React.FC<PropertyPageProps> = ({ mode, setView, handleAddPro
 
         {(currentPropType === 'rating' || currentPropType === 'range') && (
           <div className="flex flex-col gap-1">
-            <p className="flex gap-2">
-              {currentPropOptions.map((opt, index) => (
-                <span key={index}>{opt}</span>
-              ))}
-            </p>
-
-            <p className="text-text-muted text-sm font-semibold">Range</p>
+            <div className="flex items-center">
+              <p className="text-text-muted text-sm font-semibold">Range</p>
+              {propertyOptionsRangedWarning != '' && <p className="ml-auto text-sm text-red-600">{propertyOptionsRangedWarning}</p>}
+            </div>
 
             <div className="flex items-center justify-around gap-2 h-full ">
               <div className="flex flex-col w-full">

@@ -311,11 +311,23 @@ function createBitTypesWindow(type: string, id: string) {
     bitTypesWindow.loadFile(path.join(RENDERER_DIST, `bittypes${action}${parameter}`))
   }
 }
-function createCollectionsWindow(type: string, id: string) {
-  const action = type === '' || type === null ? '' : type == 'create' ? '/create-collection' : '/edit-collection'
-  const parameter = id != '' || id != null || type === 'edit' ? `/${id}` : ''
+function createCollectionsWindow(type: string, id: string, width: number, height: number) {
+  const action = type === '' || type === null ? '' : type == 'create' ? '/create-collection' : '/view-collection'
+  const parameter = id != '' || id != null || type === 'view' ? `/${id}` : ''
 
   if (collectionsWindow) {
+    const [currentX, currentY] = collectionsWindow.getPosition()
+
+    collectionsWindow.setBounds(
+      {
+        x: currentX,
+        y: currentY,
+        width,
+        height
+      },
+      true
+    )
+
     if (VITE_DEV_SERVER_URL) {
       collectionsWindow.loadURL(`${VITE_DEV_SERVER_URL}collections${action}${parameter}`)
     } else {
@@ -324,8 +336,8 @@ function createCollectionsWindow(type: string, id: string) {
     return
   }
   collectionsWindow = new BrowserWindow({
-    width: 480,
-    height: 720,
+    width: width,
+    height: height,
     resizable: false,
     autoHideMenuBar: true,
     transparent: true,
@@ -626,7 +638,7 @@ function registerShortcutActions() {
     bitTypesWindow?.focus()
   })
   shortcutsManager.registerActionHandler('open_collections', () => {
-    createCollectionsWindow('', '')
+    createCollectionsWindow('', '', 480, 720)
     collectionsWindow?.focus()
   })
   shortcutsManager.registerActionHandler('open_calendar', () => {
@@ -693,7 +705,7 @@ function registerShortcutHandlers() {
   })
 }
 
-ipcMain.handle('openWindow', async (_, windowName, actionType, id) => {
+ipcMain.handle('openWindow', async (_, windowName, actionType, id, width, height) => {
   switch (windowName) {
     case 'search':
       createSearchWindow()
@@ -712,7 +724,7 @@ ipcMain.handle('openWindow', async (_, windowName, actionType, id) => {
       bitTypesWindow?.focus()
       break
     case 'collections':
-      createCollectionsWindow(actionType, id)
+      createCollectionsWindow(actionType, id, width, height)
       collectionsWindow?.focus()
       break
     case 'calendar':
@@ -783,17 +795,17 @@ ipcMain.handle('fetchFonts', async () => {
   }
 })
 
-ipcMain.handle('openBitViewerWindow', async (_, bitId) => {
-  createBitViewerWindow(bitId)
-  bitViewerWindow?.focus()
-})
+// ipcMain.handle('openBitViewerWindow', async (_, bitId) => {
+//   createBitViewerWindow(bitId)
+//   bitViewerWindow?.focus()
+// })
 
-ipcMain.handle('openBitTypeWindow', async (_, type, typeId) => {
-  createBitTypesWindow(type, typeId)
-  bitTypesWindow?.focus()
-})
+// ipcMain.handle('openBitTypeWindow', async (_, type, typeId) => {
+//   createBitTypesWindow(type, typeId)
+//   bitTypesWindow?.focus()
+// })
 
-ipcMain.handle('openCollectionsWindow', async (_, type, id) => {
-  createCollectionsWindow(type, id)
-  collectionsWindow?.focus()
-})
+// ipcMain.handle('openCollectionsWindow', async (_, type, id) => {
+//   createCollectionsWindow(type, id, )
+//   collectionsWindow?.focus()
+// })
