@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, GripVertical, Image, ImagePlus, Pencil, Plus, RefreshCw, Trash, X } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Button from '../../components/Button'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { getIconComponent } from '../../utils/getIcon'
 import LucideIconList from '../../components/LucideIconList'
 import Input from '../../components/Input'
@@ -86,6 +86,12 @@ function CollectionItemComponent({
   )
 }
 const CollectionCreate = () => {
+  const [searchParams] = useSearchParams()
+  const paramName = searchParams.get('name')
+
+  useEffect(() => {
+    setName(paramName || '')
+  }, [paramName])
   const [view, setView] = useState<string>('mainView')
   const { addCollection } = useCollectionsStore()
 

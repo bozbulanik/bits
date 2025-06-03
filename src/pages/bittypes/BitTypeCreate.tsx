@@ -1,7 +1,7 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Button from '../../components/Button'
 import { ChevronLeft, ChevronRight, GripVertical, Image, ImagePlus, Plus, Trash, X } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import Input from '../../components/Input'
 import { getIconComponent, getPropertyIcon } from '../../utils/getIcon'
 import LucideIconList from '../../components/LucideIconList'
@@ -84,6 +84,12 @@ function PropertyItem({
 }
 
 const BitTypeCreate = () => {
+  const [searchParams] = useSearchParams()
+  const paramName = searchParams.get('name')
+  useEffect(() => {
+    setName(paramName || '')
+  }, [paramName])
+
   const [view, setView] = useState<string>('mainView')
   const navigate = useNavigate()
   const { addBitType } = useBitTypesStore()

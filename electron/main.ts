@@ -258,15 +258,15 @@ function createBitViewerWindow(bitId: string) {
     bitViewerWindow.loadFile(path.join(RENDERER_DIST, `bitviewer/${bitId}`))
   }
 }
-function createBitTypesWindow(type: string, id: string) {
+function createBitTypesWindow(type: string, id: string, args: string) {
   const action = type === '' || type === null ? '' : type == 'create' ? '/create-type' : '/edit-type'
   const parameter = id != '' || id != null || type === 'edit' ? `/${id}` : ''
 
   if (bitTypesWindow) {
     if (VITE_DEV_SERVER_URL) {
-      bitTypesWindow.loadURL(`${VITE_DEV_SERVER_URL}bittypes${action}${parameter}`)
+      bitTypesWindow.loadURL(`${VITE_DEV_SERVER_URL}bittypes${action}${parameter}${args}`)
     } else {
-      bitTypesWindow.loadFile(path.join(RENDERER_DIST, `bittypes${action}${parameter}`))
+      bitTypesWindow.loadFile(path.join(RENDERER_DIST, `bittypes${action}${parameter}${args}`))
     }
     return
   }
@@ -306,12 +306,12 @@ function createBitTypesWindow(type: string, id: string) {
   bitDatabaseManager.registerWindow(bitTypesWindow)
 
   if (VITE_DEV_SERVER_URL) {
-    bitTypesWindow.loadURL(`${VITE_DEV_SERVER_URL}bittypes${action}${parameter}`)
+    bitTypesWindow.loadURL(`${VITE_DEV_SERVER_URL}bittypes${action}${parameter}${args}`)
   } else {
-    bitTypesWindow.loadFile(path.join(RENDERER_DIST, `bittypes${action}${parameter}`))
+    bitTypesWindow.loadFile(path.join(RENDERER_DIST, `bittypes${action}${parameter}${args}`))
   }
 }
-function createCollectionsWindow(type: string, id: string, width: number, height: number) {
+function createCollectionsWindow(type: string, id: string, width: number, height: number, args: string) {
   const action = type === '' || type === null ? '' : type == 'create' ? '/create-collection' : '/view-collection'
   const parameter = id != '' || id != null || type === 'view' ? `/${id}` : ''
 
@@ -329,9 +329,9 @@ function createCollectionsWindow(type: string, id: string, width: number, height
     )
 
     if (VITE_DEV_SERVER_URL) {
-      collectionsWindow.loadURL(`${VITE_DEV_SERVER_URL}collections${action}${parameter}`)
+      collectionsWindow.loadURL(`${VITE_DEV_SERVER_URL}collections${action}${parameter}${args}`)
     } else {
-      collectionsWindow.loadFile(path.join(RENDERER_DIST, `collections${action}${parameter}`))
+      collectionsWindow.loadFile(path.join(RENDERER_DIST, `collections${action}${parameter}${args}`))
     }
     return
   }
@@ -371,9 +371,9 @@ function createCollectionsWindow(type: string, id: string, width: number, height
   bitDatabaseManager.registerWindow(collectionsWindow)
 
   if (VITE_DEV_SERVER_URL) {
-    collectionsWindow.loadURL(`${VITE_DEV_SERVER_URL}collections${action}${parameter}`)
+    collectionsWindow.loadURL(`${VITE_DEV_SERVER_URL}collections${action}${parameter}${args}`)
   } else {
-    collectionsWindow.loadFile(path.join(RENDERER_DIST, `collections${action}${parameter}`))
+    collectionsWindow.loadFile(path.join(RENDERER_DIST, `collections${action}${parameter}${args}`))
   }
 }
 function createCalendarWindow() {
@@ -617,7 +617,6 @@ app.whenReady().then(() => {
 
 function initializeShortcutDatabase() {
   // This function would populate your database with default shortcuts if it's empty
-  // You could use the node-sqlite3 API directly here or use your existing database setup
 }
 
 function registerShortcutActions() {
@@ -634,11 +633,11 @@ function registerShortcutActions() {
     searchWindow?.focus()
   })
   shortcutsManager.registerActionHandler('open_bit_types', () => {
-    createBitTypesWindow('', '')
+    createBitTypesWindow('', '', '')
     bitTypesWindow?.focus()
   })
   shortcutsManager.registerActionHandler('open_collections', () => {
-    createCollectionsWindow('', '', 480, 720)
+    createCollectionsWindow('', '', 480, 720, '')
     collectionsWindow?.focus()
   })
   shortcutsManager.registerActionHandler('open_calendar', () => {
@@ -705,7 +704,7 @@ function registerShortcutHandlers() {
   })
 }
 
-ipcMain.handle('openWindow', async (_, windowName, actionType, id, width, height) => {
+ipcMain.handle('openWindow', async (_, windowName, actionType, id, width, height, args) => {
   switch (windowName) {
     case 'search':
       createSearchWindow()
@@ -720,11 +719,11 @@ ipcMain.handle('openWindow', async (_, windowName, actionType, id, width, height
       bitViewerWindow?.focus()
       break
     case 'bittypes':
-      createBitTypesWindow(actionType, id)
+      createBitTypesWindow(actionType, id, args)
       bitTypesWindow?.focus()
       break
     case 'collections':
-      createCollectionsWindow(actionType, id, width, height)
+      createCollectionsWindow(actionType, id, width, height, args)
       collectionsWindow?.focus()
       break
     case 'calendar':
@@ -809,3 +808,10 @@ ipcMain.handle('fetchFonts', async () => {
 //   createCollectionsWindow(type, id, )
 //   collectionsWindow?.focus()
 // })
+
+ipcMain.handle('getMemoryUsage', () => {
+  return {
+    heap: process.memoryUsage(),
+    system: process.getSystemMemoryInfo?.() || null
+  }
+})

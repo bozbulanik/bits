@@ -75,14 +75,24 @@ export const useBitsStore = create<BitsStore>((set, get) => {
     isLoading: false,
     loadError: null,
     loadBits: async () => {
+      const startTime = performance.now()
+      const startMemory = await getMemoryUsage()
       set({ isLoading: true, loadError: null })
       try {
+        const ipcStart = performance.now()
         const structuredBits = await window.ipcRenderer.invoke('getStructuredBits')
+        const ipcDuration = performance.now() - ipcStart
+        console.log(`IPC call took ${Math.round(ipcDuration)}ms`)
         set({ bits: structuredBits, isLoading: false })
       } catch (err) {
         console.error('Failed to fetch bits', err)
         set({ loadError: err as Error, isLoading: false })
       }
+      const loadTime = performance.now() - startTime
+      const endMemory = await getMemoryUsage()
+
+      console.log(`Loaded bits in ${Math.round(loadTime)}ms`)
+      console.log(`Estimated memory usage: ${Math.round(endMemory - startMemory)}MB`)
     },
 
     addBit: async (type, data) => {
@@ -583,4 +593,14 @@ const isLastYear = (date: any) => {
   const lastYearStart = startOfYear(subYears(new Date(), 1))
   const lastYearEnd = endOfYear(subYears(new Date(), 1))
   return isWithinInterval(date, { start: lastYearStart, end: lastYearEnd })
+}
+
+const getMemoryUsage = async () => {
+  try {
+    const memInfo = await window.ipcRenderer.invoke('getMemoryUsage')
+    return memInfo.heap.external
+  } catch (error) {
+    console.warn('Memory info not available:', error)
+    return 0
+  }
 }

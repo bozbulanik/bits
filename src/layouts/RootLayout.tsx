@@ -19,7 +19,7 @@ const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
       style={{ fontFamily: settings.theme.fontFamily }}
       className="bg-scry-bg dark:bg-scry-bg-dark rounded-rounded border border-scry-border dark:border-scry-border-dark overflow-hidden h-screen w-screen text-text dark:text-text-dark"
     >
-      <div className="flex flex-row w-full h-full p-1">
+      <div className="flex flex-row w-full h-full p-0.5">
         <div className="bg-bg dark:bg-bg-dark w-full h-full flex flex-col rounded-[12px] border border-border dark:border-border-dark">
           {children}
         </div>

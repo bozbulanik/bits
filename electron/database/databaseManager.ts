@@ -22,59 +22,100 @@ class BitDatabaseManager {
 
   //#region BITS
   // -- READ --
+  async getBitDataByIds(bitIds: string[]): Promise<any[]> {
+    if (bitIds.length === 0) return []
+
+    return new Promise((resolve, reject) => {
+      const placeholders = bitIds.map(() => '?').join(',')
+      const sql = `SELECT * FROM bit_data WHERE bit_id IN (${placeholders})`
+
+      db.all(sql, bitIds, (err: Error | null, rows: any[]) => {
+        if (err) reject(err)
+        else resolve(rows)
+      })
+    })
+  }
+  async getBitNotesByIds(bitIds: string[]): Promise<any[]> {
+    if (bitIds.length === 0) return []
+
+    return new Promise((resolve, reject) => {
+      const placeholders = bitIds.map(() => '?').join(',')
+      const sql = `SELECT * FROM bit_notes WHERE bit_id IN (${placeholders})`
+
+      db.all(sql, bitIds, (err: Error | null, rows: any[]) => {
+        if (err) reject(err)
+        else resolve(rows)
+      })
+    })
+  }
   async getStructuredBits(): Promise<Bit[]> {
     try {
-      // Ensure we have the latest bit types
+      // Ensure bit types are cached
       if (this.cachedBitTypes.length === 0) {
         await this.getStructuredBitTypes()
       }
 
-      const bitRows: any[] = (await this.getBits()) as any[]
-      const structuredBits = await Promise.all(
-        bitRows.map(async (bit) => {
-          const bitDataRows = (await this.getBitDataById(bit.id)) as any[]
-          const bitNoteRows = (await this.getBitNotesById(bit.id)) as any[]
-          const type = this.cachedBitTypes.find((t) => t.id === bit.type_id)
+      // 1. Get all bits (one query)
+      const bits: any[] = (await this.getBits()) as any[]
+      const bitIds = bits.map((bit) => bit.id)
 
-          const formattedData = bitDataRows.map(
-            (data) =>
-              ({
-                bitId: data.bit_id,
-                propertyId: data.property_id,
-                value: data.value
-              } as BitData)
-          )
+      if (bitIds.length === 0) {
+        return []
+      }
 
-          const formattedNotes = bitNoteRows.map(
-            (note) =>
-              ({
-                id: note.id,
-                bitId: note.bit_id,
-                createdAt: note.created_at,
-                updatedAt: note.updated_at,
-                content: note.content
-              } as Note)
-          )
+      // 2. Get all bit data in one query
+      const allBitData: any[] = (await this.getBitDataByIds(bitIds)) as any[]
 
-          return {
-            id: bit.id,
-            type,
-            createdAt: bit.created_at,
-            updatedAt: bit.updated_at,
-            pinned: bit.pinned,
-            data: formattedData,
-            notes: formattedNotes
-          } as Bit
+      // 3. Get all bit notes in one query
+      const allBitNotes: any[] = (await this.getBitNotesByIds(bitIds)) as any[]
+
+      // 4. Group bit data by bit_id
+      const bitDataMap = new Map<string, BitData[]>()
+      allBitData.forEach((data) => {
+        if (!bitDataMap.has(data.bit_id)) {
+          bitDataMap.set(data.bit_id, [])
+        }
+        bitDataMap.get(data.bit_id).push({
+          bitId: data.bit_id,
+          propertyId: data.property_id,
+          value: data.value
         })
-      )
+      })
 
-      // Filter out null entries (from unknown type IDs)
-      return structuredBits.filter(Boolean) as Bit[]
+      // 5. Group bit notes by bit_id
+      const bitNotesMap = new Map<string, Note[]>()
+      allBitNotes.forEach((note) => {
+        if (!bitNotesMap.has(note.bit_id)) {
+          bitNotesMap.set(note.bit_id, [])
+        }
+        bitNotesMap.get(note.bit_id).push({
+          id: note.id,
+          bitId: note.bit_id,
+          createdAt: note.created_at,
+          updatedAt: note.updated_at,
+          content: note.content
+        })
+      })
+
+      // 6. Assemble structured bits
+      const structuredBits: Bit[] = bits.map((bit) => ({
+        id: bit.id,
+        type: this.cachedBitTypes.find((t) => t.id === bit.type_id),
+        createdAt: bit.created_at,
+        updatedAt: bit.updated_at,
+        pinned: bit.pinned,
+        data: bitDataMap.get(bit.id) || [],
+        notes: bitNotesMap.get(bit.id) || []
+      }))
+
+      // 7. Filter out bits with unknown type just in case
+      return structuredBits.filter((bit) => bit.type != null)
     } catch (error) {
       console.error('Error getting structured bits:', error)
       throw error
     }
   }
+
   async getBits() {
     return new Promise((resolve, reject) => {
       db.all('SELECT * FROM bits', [], (err: string, rows: []) => {
@@ -234,13 +275,13 @@ class BitDatabaseManager {
       })
     })
   }
-  async getStructuredPinnedBits() {
+  async getStructuredPinnedBits(rows: any) {
     try {
       if (this.cachedBitTypes.length === 0) {
         await this.getStructuredBitTypes()
       }
 
-      const bitRows: any[] = (await this.getPinnedBits()) as any[]
+      const bitRows: any[] = rows as any[]
       const structuredBits = await Promise.all(
         bitRows.map(async (bit) => {
           const bitDataRows = (await this.getBitDataById(bit.id)) as any[]
@@ -730,7 +771,8 @@ class BitDatabaseManager {
     })
 
     ipcMain.handle('getStructuredPinnedBits', async () => {
-      return await this.getStructuredPinnedBits()
+      const fetched = await this.getPinnedBits()
+      return await this.getStructuredPinnedBits(fetched)
     })
     //#endregion
 

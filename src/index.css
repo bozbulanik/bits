@@ -8,7 +8,7 @@
 @theme {
   /* --font-font: 'Montserrat', 'sans'; */
   /* Background */
-  --color-bg: #fff;
+  --color-bg: #ffffff;
   --color-bg-dark: #0f0f0f; /* 0a0a0a */ /*09090b*/
 
   /* Secondary */
@@ -16,8 +16,8 @@
   --color-scry-bg-dark: #161616; /*#18181a*/ /*101011*/
 
   /* Standard Border */
-  --color-border: #eee;
-  --color-border-dark: #303030; /*#262626*/
+  --color-border: #e0e0e0;
+  --color-border-dark: #242424; /*#262626*/
 
   --color-scry-border: #939393;
   --color-scry-border-dark: #545454;
@@ -26,8 +26,8 @@
   --radius-rounded: 16px;
 
   /* Standard Hover */
-  --color-bg-hover: #d4d4d4;
-  --color-bg-hover-dark: #222222;
+  --color-bg-hover: #e9e9e9;
+  --color-bg-hover-dark: #1d1d1d;
 
   /* Text */
   --color-text: #18181b;
@@ -57,23 +57,23 @@
   --color-button-border-hover-dark: #3b3b3b;
 
   --color-button-bg-error: #ffbebf;
-  --color-button-bg-error-dark: #9f071280;
+  --color-button-bg-error-dark: #9f0712;
 
   --color-button-bg-error-hover: #ff9da2;
-  --color-button-bg-error-hover-dark: #9f0712b3;
+  --color-button-bg-error-hover-dark: #9f0712;
 
   --color-button-border-error: #fb2c36;
-  --color-button-border-error-dark: #fb2c36bf;
+  --color-button-border-error-dark: #fb2c36;
 
   --color-button-border-error-hover: #e92c35;
   --color-button-border-error-hover-dark: #fb2c36;
 
   /* Input */
-  --color-input-bg: #ececec85;
-  --color-input-bg-dark: #18181880;
+  --color-input-bg: #ececec;
+  --color-input-bg-dark: #181818;
 
-  --color-input-bg-hover: #dfdddd81;
-  --color-input-bg-hover-dark: #25252579;
+  --color-input-bg-hover: #dfdddd;
+  --color-input-bg-hover-dark: #252525;
 
   --color-input-border: #dddddd;
   --color-input-border-dark: #303030;
@@ -82,13 +82,13 @@
   --color-input-border-hover-dark: #3b3b3b;
 
   --color-input-bg-error: #ffbebf;
-  --color-input-bg-error-dark: #9f071280;
+  --color-input-bg-error-dark: #9f0712;
 
   --color-input-bg-error-hover: #ff9da2;
-  --color-input-bg-error-hover-dark: #9f0712b3;
+  --color-input-bg-error-hover-dark: #9f0712;
 
   --color-input-border-error: #fb2c36;
-  --color-input-border-error-dark: #fb2c36bf;
+  --color-input-border-error-dark: #fb2c36;
 
   --color-input-border-error-hover: #e92c35;
   --color-input-border-error-hover-dark: #fb2c36;

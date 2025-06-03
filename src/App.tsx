@@ -26,6 +26,7 @@ import Collections from './pages/collections/Collections'
 import CollectionCreate from './pages/collections/CollectionCreate'
 import CollectionView from './pages/collections/CollectionView'
 import TestingPage from './pages/TestingPage'
+import SearchPageOld from './pages/SearchPageOld'
 
 function App() {
   const { isLoading: bitsLoading, loadError: bitsError } = useBitsStore()

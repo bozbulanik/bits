@@ -104,7 +104,7 @@ const SearchItem: React.FC<SearchItemProps> = ({ bit, openBitDeletePanel, toggle
   )
 }
 
-const SearchPage = () => {
+const SearchPageOld = () => {
   const [recentlyOpenedBitIds, setRecentlyOpenedBitIds] = useState<string[]>([])
   useEffect(() => {
     const history = getBitIdsFromHistory()
@@ -302,4 +302,4 @@ const SearchPage = () => {
   )
 }
 
-export default SearchPage
+export default SearchPageOld
