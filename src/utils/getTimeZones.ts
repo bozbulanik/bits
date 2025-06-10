@@ -1137,3 +1137,12 @@ export const timezones = [
     utc: ['Pacific/Apia']
   }
 ]
+
+export const timezoneOptions = [
+  {
+    options: timezones.map((opt) => ({
+      value: opt.value,
+      label: opt.text + ', ' + opt.value
+    }))
+  }
+]

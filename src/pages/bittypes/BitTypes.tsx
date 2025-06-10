@@ -7,13 +7,11 @@ import { useEffect, useRef, useState } from 'react'
 import { getIconComponent } from '../../utils/getIcon'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { useBitsStore } from '../../stores/bitsStore'
 
 const BitTypes = () => {
   const navigate = useNavigate()
 
   const { bitTypes, deleteBitType } = useBitTypesStore()
-  const { getBitCountByType } = useBitsStore()
   const [hoveredBitTypeId, setHoveredBitTypeId] = useState<string | null>('')
   const [bitTypeDeletePanelOpened, setBitTypeDeletePanelOpened] = useState<boolean>(false)
   const [bitTypeIdToDelete, setBitTypeIdToDelete] = useState<string>('')
@@ -23,7 +21,7 @@ const BitTypes = () => {
   const openBitTypeDeletePanel = (id: string) => {
     setBitTypeDeletePanelOpened(true)
     setBitTypeIdToDelete(id)
-    setBitCount(getBitCountByType(id))
+    setBitCount(0)
   }
   const handleBitTypeDelete = () => {
     deleteBitType(bitTypeIdToDelete)
@@ -108,7 +106,7 @@ const BitTypes = () => {
         <div className="flex-1 h-full flex items-center drag-bar">
           <p className="ml-1 font-semibold text-lg">Bit Type Manager</p>
         </div>
-        <Button onClick={() => window.ipcRenderer.invoke('closeWindow', 'bittypes')} variant={'iconGhost'} className="ml-auto">
+        <Button onClick={() => window.ipcRenderer.send('closeWindow')} variant={'iconGhost'} className="ml-auto">
           <X size={16} strokeWidth={1.5} />
         </Button>
       </div>

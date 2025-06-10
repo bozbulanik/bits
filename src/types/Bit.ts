@@ -11,7 +11,7 @@ export interface Bit {
 export interface BitData {
   bitId: string // Bit id
   propertyId: string // ID of the linked property
-  value: BitTypePropertyDefinitionDVType // Value of the data
+  value: BitDataValue // Value of the data
 }
 
 export interface Note {
@@ -20,21 +20,6 @@ export interface Note {
   createdAt: string // ISO string
   updatedAt: string // ISO string (optional if needed)
   content: string // Markdown content
-}
-
-export interface Collection {
-  id: string // Unique ID for the collection
-  name: string // Name of the collection
-  iconName: string // Icon name of the collection / parsed to get lucide-react icons with name
-  createdAt: string // Creation date ISO string
-  updatedAt: string // Update date ISO string
-  items: CollectionItem[] // Items of the collection
-}
-
-export interface CollectionItem {
-  id: string // Unique ID for the collection item
-  bitId: string // Referenced bit id
-  orderIndex: number // Local index for the collection
 }
 
 export interface BitTypeDefinition {
@@ -50,10 +35,9 @@ export interface BitTypePropertyDefinition {
   id: string // Unique ID for the property
   name: string // Name of the bit type property
   type: BitTypePropertyDefinitionType // Type of the bit type property
-  required: boolean // Is it required?
-  defaultValue?: BitTypePropertyDefinitionDVType // Default value for the bit type property
   options?: string[] | [number, number, number] // Multi select or select options
   order: number
+  isTitle: boolean // Is data title of the bit?
 }
 
 export type BitTypePropertyDefinitionType = //Data type
@@ -120,4 +104,19 @@ export type BitTypePropertyDefinitionType = //Data type
     
 */
 
-export type BitTypePropertyDefinitionDVType = any | any[] | [number, number]
+export type BitDataValue = any | any[] | [number, number]
+
+export interface AIChat {
+  id: string
+  title: string
+  createdAt: string
+  updatedAt: string
+  messages: AIMessage[]
+}
+
+export interface AIMessage {
+  id: string
+  role: string
+  content: string
+  timestamp: Date
+}

@@ -46,6 +46,9 @@ export class SettingsManager {
           reminders: true,
           dailyCheckin: false,
           updates: true
+        },
+        bitCreator: {
+          defaultBitType: '98d99795-4d2d-4a4e-bf79-a2604ddf4348'
         }
       }
     })

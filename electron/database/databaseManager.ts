@@ -1,5 +1,5 @@
 import { BrowserWindow, ipcMain } from 'electron'
-import { Bit, BitData, BitTypeDefinition, BitTypePropertyDefinition, Collection, CollectionItem, Note } from '../../src/types/Bit'
+import { AIChat, AIMessage, Bit, BitData, BitTypeDefinition, BitTypePropertyDefinition, Note } from '../../src/types/Bit'
 import { db } from './database'
 
 class BitDatabaseManager {
@@ -21,42 +21,15 @@ class BitDatabaseManager {
   }
 
   //#region BITS
-  // -- READ --
-  async getBitDataByIds(bitIds: string[]): Promise<any[]> {
-    if (bitIds.length === 0) return []
-
-    return new Promise((resolve, reject) => {
-      const placeholders = bitIds.map(() => '?').join(',')
-      const sql = `SELECT * FROM bit_data WHERE bit_id IN (${placeholders})`
-
-      db.all(sql, bitIds, (err: Error | null, rows: any[]) => {
-        if (err) reject(err)
-        else resolve(rows)
-      })
-    })
-  }
-  async getBitNotesByIds(bitIds: string[]): Promise<any[]> {
-    if (bitIds.length === 0) return []
-
-    return new Promise((resolve, reject) => {
-      const placeholders = bitIds.map(() => '?').join(',')
-      const sql = `SELECT * FROM bit_notes WHERE bit_id IN (${placeholders})`
-
-      db.all(sql, bitIds, (err: Error | null, rows: any[]) => {
-        if (err) reject(err)
-        else resolve(rows)
-      })
-    })
-  }
-  async getStructuredBits(): Promise<Bit[]> {
+  // -- STRUCTURE --
+  async structurizeBits(rows: any) {
     try {
-      // Ensure bit types are cached
       if (this.cachedBitTypes.length === 0) {
         await this.getStructuredBitTypes()
       }
 
       // 1. Get all bits (one query)
-      const bits: any[] = (await this.getBits()) as any[]
+      const bits: any[] = rows as any[]
       const bitIds = bits.map((bit) => bit.id)
 
       if (bitIds.length === 0) {
@@ -75,7 +48,7 @@ class BitDatabaseManager {
         if (!bitDataMap.has(data.bit_id)) {
           bitDataMap.set(data.bit_id, [])
         }
-        bitDataMap.get(data.bit_id).push({
+        bitDataMap.get(data.bit_id)!.push({
           bitId: data.bit_id,
           propertyId: data.property_id,
           value: data.value
@@ -88,7 +61,7 @@ class BitDatabaseManager {
         if (!bitNotesMap.has(note.bit_id)) {
           bitNotesMap.set(note.bit_id, [])
         }
-        bitNotesMap.get(note.bit_id).push({
+        bitNotesMap.get(note.bit_id)!.push({
           id: note.id,
           bitId: note.bit_id,
           createdAt: note.created_at,
@@ -100,7 +73,7 @@ class BitDatabaseManager {
       // 6. Assemble structured bits
       const structuredBits: Bit[] = bits.map((bit) => ({
         id: bit.id,
-        type: this.cachedBitTypes.find((t) => t.id === bit.type_id),
+        type: this.cachedBitTypes.find((t) => t.id === bit.type_id) as BitTypeDefinition,
         createdAt: bit.created_at,
         updatedAt: bit.updated_at,
         pinned: bit.pinned,
@@ -116,14 +89,7 @@ class BitDatabaseManager {
     }
   }
 
-  async getBits() {
-    return new Promise((resolve, reject) => {
-      db.all('SELECT * FROM bits', [], (err: string, rows: []) => {
-        if (err) reject(err)
-        else resolve(rows)
-      })
-    })
-  }
+  // -- READ --
   async getBitDataById(bit_id: string) {
     return new Promise((resolve, reject) => {
       db.all('SELECT * FROM bit_data WHERE bit_id = ? ', [bit_id], (err: string, rows: any) => {
@@ -132,9 +98,43 @@ class BitDatabaseManager {
       })
     })
   }
+  async getBitDataByIds(bitIds: string[]): Promise<any[]> {
+    if (bitIds.length === 0) return []
+
+    return new Promise((resolve, reject) => {
+      const placeholders = bitIds.map(() => '?').join(',')
+      const sql = `SELECT * FROM bit_data WHERE bit_id IN (${placeholders})`
+
+      db.all(sql, bitIds, (err: Error | null, rows: any[]) => {
+        if (err) reject(err)
+        else resolve(rows)
+      })
+    })
+  }
   async getBitNotesById(bit_id: string) {
     return new Promise((resolve, reject) => {
       db.all('SELECT * FROM bit_notes WHERE bit_id = ? ', [bit_id], (err: string, rows: any) => {
+        if (err) reject(err)
+        else resolve(rows)
+      })
+    })
+  }
+  async getBitNotesByIds(bitIds: string[]): Promise<any[]> {
+    if (bitIds.length === 0) return []
+
+    return new Promise((resolve, reject) => {
+      const placeholders = bitIds.map(() => '?').join(',')
+      const sql = `SELECT * FROM bit_notes WHERE bit_id IN (${placeholders})`
+
+      db.all(sql, bitIds, (err: Error | null, rows: any[]) => {
+        if (err) reject(err)
+        else resolve(rows)
+      })
+    })
+  }
+  async getAllBits() {
+    return new Promise((resolve, reject) => {
+      db.all('SELECT * FROM bits', [], (err: string, rows: []) => {
         if (err) reject(err)
         else resolve(rows)
       })
@@ -165,6 +165,15 @@ class BitDatabaseManager {
       })
     })
   }
+  async getBitById(id: string) {
+    return new Promise((resolve, reject) => {
+      db.all('SELECT * FROM bits WHERE id = ? ', [id], (err: string, rows: any) => {
+        if (err) reject(err)
+        else resolve(rows)
+      })
+    })
+  }
+
   // -- CREATE --
   async addBit(id: string, typeId: string, createdAt: string, updatedAt: string, pinned: number, bitData: BitData[]) {
     return new Promise((resolve, reject) => {
@@ -293,7 +302,8 @@ class BitDatabaseManager {
               ({
                 bitId: data.bit_id,
                 propertyId: data.property_id,
-                value: data.value
+                value: data.value,
+                isTitle: data.is_title === 1
               } as BitData)
           )
 
@@ -327,6 +337,50 @@ class BitDatabaseManager {
       throw error
     }
   }
+
+  // -- QUERY --
+  async getBitsByQuery(query: string) {
+    const sqlQuery = `
+        SELECT DISTINCT bits.* 
+        FROM bits 
+        JOIN bit_data ON bit_data.bit_id = bits.id 
+        WHERE LOWER(bit_data.value) LIKE LOWER(?)
+    `
+
+    return new Promise((resolve, reject) => {
+      db.all(sqlQuery, [`%${query}%`], (err: string, rows: []) => {
+        if (err) reject(err)
+        else resolve(rows)
+      })
+    })
+  }
+  async getBitsBetweenDate(from: Date, to: Date) {
+    const sqlQuery = `
+      SELECT * FROM bits WHERE created_at BETWEEN ? AND ?
+    `
+    return new Promise((resolve, reject) => {
+      db.all(sqlQuery, [from.toISOString(), to.toISOString()], (err: string, rows: []) => {
+        if (err) reject(err)
+        else resolve(rows)
+      })
+    })
+  }
+  async getBitsWithDateDataBetweenDate(from: Date, to: Date) {
+    const sqlQuery = `
+    SELECT DISTINCT bits.*
+    FROM bits
+    JOIN bit_data ON bit_data.bit_id = bits.id
+    JOIN bit_type_properties ON bit_data.property_id = bit_type_properties.id
+    WHERE bit_data.value BETWEEN ? AND ?
+      AND bit_type_properties.type IN (?, ?, ?)
+  `
+    return new Promise((resolve, reject) => {
+      db.all(sqlQuery, [from.toISOString(), to.toISOString(), 'date', 'time', 'datetime'], (err: string, rows: []) => {
+        if (err) reject(err)
+        else resolve(rows)
+      })
+    })
+  }
   //#endregion
 
   //#region TYPES
@@ -352,7 +406,8 @@ class BitDatabaseManager {
                   required: Boolean(prop.required),
                   defaultValue: prop.default_value,
                   options: JSON.parse(prop.options),
-                  order: prop.order_index || 0
+                  order: prop.order_index || 0,
+                  isTitle: prop.is_title === 1
                 } as BitTypePropertyDefinition)
             )
           } as BitTypeDefinition
@@ -400,8 +455,8 @@ class BitDatabaseManager {
           const insertPromises = propertiesWithOrder.map((prop) => {
             return new Promise<void>((res, rej) => {
               db.run(
-                'INSERT INTO bit_type_properties (id, type_id, name, type, required, default_value, options, order_index) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                [prop.id, id, prop.name, prop.type, prop.required, prop.defaultValue, JSON.stringify(prop.options), prop.order],
+                'INSERT INTO bit_type_properties (id, type_id, name, type, options, order_index, is_title) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                [prop.id, id, prop.name, prop.type, JSON.stringify(prop.options), prop.order, prop.isTitle ? 1 : 0],
                 function (err: string) {
                   if (err) rej(err)
                   else res()
@@ -435,17 +490,16 @@ class BitDatabaseManager {
           return new Promise<void>((res, rej) => {
             db.run(
               `
-              INSERT INTO bit_type_properties (id, type_id, name, type, required, default_value, options, order_index)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+              INSERT INTO bit_type_properties (id, type_id, name, type,  options, order_index, is_title)
+              VALUES (?, ?, ?, ?, ?, ?, ?)
               ON CONFLICT(id) DO UPDATE SET
                 name=excluded.name,
                 type_id=excluded.type_id,
-                required=excluded.required,
-                default_value=excluded.default_value,
                 options=excluded.options,
-                order_index=excluded.order_index
+                order_index=excluded.order_index,
+                is_title=excluded.is_title
               `,
-              [prop.id, id, prop.name, prop.type, prop.required, prop.defaultValue, JSON.stringify(prop.options), prop.order],
+              [prop.id, id, prop.name, prop.type, JSON.stringify(prop.options), prop.order, prop.isTitle ? 1 : 0],
               function (insertErr: string) {
                 if (insertErr) rej(insertErr)
                 else res()
@@ -521,168 +575,101 @@ class BitDatabaseManager {
   }
   //#endregion
 
-  //#region COLLECTIONS
-  async getCollections() {
+  //#region AI
+  async getAIChatsByOffset(limit: number, offset: number) {
     return new Promise((resolve, reject) => {
-      db.all('SELECT * FROM collections', [], (err: string, rows: []) => {
+      db.all('SELECT * FROM ai_chats ORDER BY updated_at DESC LIMIT ? OFFSET ? ', [limit, offset], (err: string, rows: []) => {
         if (err) reject(err)
         else resolve(rows)
       })
     })
   }
-  async getCollectionItemsById(collectionId: string) {
-    return new Promise((resolve, reject) => {
-      db.all('SELECT * FROM collection_items WHERE collection_id = ? ORDER BY order_index ASC', [collectionId], (err: string, rows: any) => {
-        if (err) reject(err)
-        else resolve(rows)
-      })
-    })
-  }
-  async getStructuredCollections(): Promise<Collection[]> {
+  async getAIChats(limit: number, offset: number) {
     try {
-      const collectionRows: any[] = (await this.getCollections()) as any[]
-      const structuredCollections = await Promise.all(
-        collectionRows.map(async (collection) => {
-          const collectionItems = (await this.getCollectionItemsById(collection.id)) as any[]
+      const chatRows: any[] = (await this.getAIChatsByOffset(limit, offset)) as any[]
+      const structuredChats = await Promise.all(
+        chatRows.map(async (chat) => {
+          const msgs = JSON.parse(chat.messages)
           return {
-            id: collection.id,
-            name: collection.name,
-            iconName: collection.icon_name,
-            createdAt: collection.created_at,
-            updatedAt: collection.updated_at,
-            items: collectionItems.map(
-              (item) =>
+            id: chat.id,
+            title: chat.title,
+            createdAt: chat.created_at,
+            updatedAt: chat.updated_at,
+            messages: msgs.map(
+              (msg: any) =>
                 ({
-                  id: item.id,
-                  bitId: item.bit_id,
-                  orderIndex: item.order_index
-                } as CollectionItem)
+                  id: msg.id,
+                  role: msg.role,
+                  content: msg.content,
+                  timestamp: msg.timestamp
+                } as AIMessage)
             )
-          } as Collection
+          } as AIChat
         })
       )
-      return structuredCollections
+      return structuredChats
     } catch (error) {
-      console.error('Error getting structured collections:', error)
+      console.error('Error getting structured chats:', error)
       throw error
     }
   }
-  async addCollection(id: string, name: string, iconName: string, createdAt: string, updatedAt: string, items: CollectionItem[]) {
+  async updateChat(chat: AIChat) {
     return new Promise((resolve, reject) => {
       db.run(
-        'INSERT INTO collections (id, name, icon_name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-        [id, name, iconName, createdAt, updatedAt],
-        function (err: string) {
-          if (err) return reject(err)
-
-          const itemsWithOrder = items.map((item, index) => ({
-            ...item,
-            orderIndex: item.orderIndex !== undefined ? item.orderIndex : index
-          }))
-
-          const insertPromises = itemsWithOrder.map((item) => {
-            return new Promise<void>((res, rej) => {
-              db.run(
-                'INSERT INTO collection_items (id, collection_id, bit_id, order_index) VALUES (?, ?, ?, ?)',
-                [item.id, id, item.bitId, item.orderIndex],
-                function (err: string) {
-                  if (err) rej(err)
-                  else res()
-                }
-              )
-            })
-          })
-
-          Promise.all(insertPromises)
-            .then(() => resolve({ id, name }))
-            .catch(reject)
+        'INSERT INTO ai_chats (id, title, messages, created_at, updated_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT (id) DO UPDATE SET title = excluded.title, messages = excluded.messages, updated_at = excluded.updated_at',
+        [chat.id, chat.title, JSON.stringify(chat.messages), chat.createdAt, chat.updatedAt],
+        function (err: Error | null) {
+          if (err) reject(err)
+          else resolve(chat.id)
         }
       )
     })
   }
-  async updateCollection(id: string, name: string, iconName: string, createdAt: string, updatedAt: string, items: CollectionItem[]) {
+  async getChatById(id: string) {
     return new Promise((resolve, reject) => {
-      db.run(
-        'UPDATE collections SET name = ?, icon_name = ?, created_at = ?, updated_at = ? WHERE id = ?',
-        [name, iconName, createdAt, updatedAt, id],
-        function (err: string) {
-          if (err) return reject(err)
-
-          const itemIds = items.map((i) => i.id)
-          const placeholders = itemIds.map(() => '?').join(',')
-
-          const itemsWithOrder = items.map((item, index) => ({
-            ...item,
-            orderIndex: item.orderIndex !== undefined ? item.orderIndex : index
-          }))
-
-          const upsertPromises = itemsWithOrder.map((item) => {
-            return new Promise<void>((res, rej) => {
-              db.run(
-                `
-              INSERT INTO collection_items (id, collection_id, bit_id, order_index)
-              VALUES (?, ?, ?, ?)
-              ON CONFLICT(id) DO UPDATE SET
-                collection_id=excluded.collection_id,
-                bit_id=excluded.bit_id,
-                order_index=excluded.order_index
-              `,
-                [item.id, id, item.bitId, item.orderIndex],
-                function (insertErr: string) {
-                  if (insertErr) rej(insertErr)
-                  else res()
-                }
-              )
-            })
-          })
-          Promise.all(upsertPromises)
-            .then(() => {
-              if (itemIds.length === 0) {
-                db.run('DELETE FROM collection_items WHERE collection_id = ?', [id], function (deleteErr: string) {
-                  if (deleteErr) return reject(deleteErr)
-                  else resolve({ id, name })
-                })
-              } else {
-                db.run(
-                  `DELETE FROM collection_items WHERE collection_id = ? AND id NOT IN (${placeholders})`,
-                  [id, ...itemIds],
-                  function (deleteErr: string) {
-                    if (deleteErr) return reject(deleteErr)
-                    else resolve({ id, name })
-                  }
-                )
-              }
-            })
-            .catch(reject)
-        }
-      )
-    })
-  }
-  async deleteCollection(id: string) {
-    return new Promise((resolve, reject) => {
-      db.run('DELETE FROM collections WHERE id = ?', [id], function (err: string) {
-        if (err) return reject(err)
-
-        db.run('DELETE FROM collection_items WHERE collection_id = ?', [id], function (err: string) {
-          if (err) return reject(err)
-          resolve({ id })
-        })
+      db.all('SELECT * FROM ai_chats WHERE id = ? ', [id], (err: string, rows: []) => {
+        if (err) reject(err)
+        else resolve(rows)
       })
     })
+  }
+  async getStructuredChatById(id: string) {
+    try {
+      const chatRows: any[] = (await this.getChatById(id)) as any[]
+      const structuredChats = await Promise.all(
+        chatRows.map(async (chat) => {
+          const msgs = JSON.parse(chat.messages)
+          return {
+            id: chat.id,
+            title: chat.title,
+            createdAt: chat.created_at,
+            updatedAt: chat.updated_at,
+            messages: msgs.map(
+              (msg: any) =>
+                ({
+                  id: msg.id,
+                  role: msg.role,
+                  content: msg.content,
+                  timestamp: msg.timestamp
+                } as AIMessage)
+            )
+          } as AIChat
+        })
+      )
+      return structuredChats
+    } catch (error) {
+      console.error('Error getting structured chats:', error)
+      throw error
+    }
   }
   //#endregion
 
   //#region BROADCASTING
   private async broadcastBitUpdate(): Promise<void> {
-    try {
-      const structuredBits = await this.getStructuredBits()
-      for (const window of this.windows) {
-        if (!window.isDestroyed()) {
-          window.webContents.send('bits-updated', structuredBits)
-        }
+    for (const window of this.windows) {
+      if (!window.isDestroyed()) {
+        window.webContents.send('bits-updated')
       }
-    } catch (error) {
-      console.error('Error broadcasting bit update:', error)
     }
   }
   private async broadcastBitTypeUpdate(): Promise<void> {
@@ -697,31 +684,11 @@ class BitDatabaseManager {
       console.error('Error broadcasting bit type update:', error)
     }
   }
-  private async broadcastCollectionsUpdate(): Promise<void> {
-    try {
-      const structuredCollections = await this.getStructuredCollections()
-      for (const window of this.windows) {
-        if (!window.isDestroyed()) {
-          window.webContents.send('collections-updated', structuredCollections)
-        }
-      }
-    } catch (error) {
-      console.error('Error broadcasting collections update:', error)
-    }
-  }
   //#endregion
 
   //#region IPC HANDLERS
   setupIpcHandlers() {
     //#region BITS
-    ipcMain.handle('getStructuredBits', async () => {
-      return await this.getStructuredBits()
-    })
-
-    ipcMain.handle('getBits', async () => {
-      return await this.getBits()
-    })
-
     ipcMain.handle('getBitDataById', async (_event, bit_id) => {
       return await this.getBitDataById(bit_id)
     })
@@ -729,7 +696,6 @@ class BitDatabaseManager {
     ipcMain.handle('addBit', async (_, id: string, typeId: string, createdAt: string, updatedAt: string, pinned: number, bitData: BitData[]) => {
       const result = await this.addBit(id, typeId, createdAt, updatedAt, pinned, bitData)
       await this.broadcastBitUpdate()
-      await this.broadcastCollectionsUpdate()
       return result
     })
 
@@ -742,7 +708,6 @@ class BitDatabaseManager {
     ipcMain.handle('updateBit', async (_, id: string, bitData: BitData[], timeStamp: string) => {
       const result = await this.updateBit(id, bitData, timeStamp)
       await this.broadcastBitUpdate()
-      await this.broadcastCollectionsUpdate()
       return result
     })
 
@@ -760,7 +725,6 @@ class BitDatabaseManager {
     ipcMain.handle('deleteBit', async (_, id: string) => {
       const result = await this.deleteBit(id)
       await this.broadcastBitUpdate()
-      await this.broadcastCollectionsUpdate()
       return result
     })
 
@@ -774,6 +738,26 @@ class BitDatabaseManager {
       const fetched = await this.getPinnedBits()
       return await this.getStructuredPinnedBits(fetched)
     })
+
+    ipcMain.handle('searchBits', async (_, query: string) => {
+      const queriedBits = await this.getBitsByQuery(query)
+      return await this.structurizeBits(queriedBits)
+    })
+
+    ipcMain.handle('getBitsBetweenDate', async (_, from: Date, to: Date) => {
+      const queriedBits = await this.getBitsBetweenDate(from, to)
+      return await this.structurizeBits(queriedBits)
+    })
+    ipcMain.handle('getBitsWithDateDataBetweenDate', async (_, from: Date, to: Date) => {
+      const queriedBits = await this.getBitsWithDateDataBetweenDate(from, to)
+      return await this.structurizeBits(queriedBits)
+    })
+
+    ipcMain.handle('getBitById', async (_, id: string) => {
+      const queriedBits = await this.getBitById(id)
+      return await this.structurizeBits(queriedBits)
+    })
+
     //#endregion
 
     //#region TYPES
@@ -813,36 +797,19 @@ class BitDatabaseManager {
       const result = await this.deleteBitType(id)
       await this.broadcastBitTypeUpdate()
       await this.broadcastBitUpdate()
-      await this.broadcastCollectionsUpdate()
       return result
     })
     //#endregion
 
-    //#region COLLECTIONS
-
-    ipcMain.handle('getStructuredCollections', async () => {
-      return await this.getStructuredCollections()
+    //#region AI
+    ipcMain.handle('getAIChats', async (_event, limit: number, offset: number) => {
+      return await this.getAIChats(limit, offset)
     })
-    ipcMain.handle(
-      'addCollection',
-      async (_, id: string, name: string, iconName: string, createdAt: string, updatedAt: string, items: CollectionItem[]) => {
-        const result = await this.addCollection(id, name, iconName, createdAt, updatedAt, items)
-        await this.broadcastCollectionsUpdate()
-        return result
-      }
-    )
-    ipcMain.handle(
-      'updateCollection',
-      async (_, id: string, name: string, iconName: string, createdAt: string, updatedAt: string, items: CollectionItem[]) => {
-        const result = await this.updateCollection(id, name, iconName, createdAt, updatedAt, items)
-        await this.broadcastCollectionsUpdate()
-        return result
-      }
-    )
-    ipcMain.handle('deleteCollection', async (_, id: string) => {
-      const result = await this.deleteCollection(id)
-      await this.broadcastCollectionsUpdate()
-      return result
+    ipcMain.handle('updateChat', async (_event, chat: AIChat) => {
+      return await this.updateChat(chat)
+    })
+    ipcMain.handle('getChatById', async (_event, id: string) => {
+      return await this.getStructuredChatById(id)
     })
     //#endregion
   }

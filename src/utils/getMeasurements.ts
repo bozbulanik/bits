@@ -47,3 +47,70 @@ export const measurementArea = [
   { name: 'Square foot', abbr: 'ft²' },
   { name: 'Acre', abbr: 'ac' }
 ]
+
+export const measurementOptions = [
+  {
+    header: 'Mass',
+    options: measurementMass.map((opt) => ({
+      value: opt.abbr,
+      label: opt.name + ` (${opt.abbr})`
+    })),
+    divider: true
+  },
+  {
+    header: 'Length',
+    options: measurementLength.map((opt) => ({
+      value: opt.abbr,
+      label: opt.name + ` (${opt.abbr})`
+    })),
+    divider: true
+  },
+  {
+    header: 'Volume',
+    options: measurementVolume.map((opt) => ({
+      value: opt.abbr,
+      label: opt.name + ` (${opt.abbr})`
+    })),
+    divider: true
+  },
+  {
+    header: 'Temperature',
+    options: measurementTemperature.map((opt) => ({
+      value: opt.abbr,
+      label: opt.name + ` (${opt.abbr})`
+    })),
+    divider: true
+  },
+  {
+    header: 'Energy',
+    options: measurementEnergy.map((opt) => ({
+      value: opt.abbr,
+      label: opt.name + ` (${opt.abbr})`
+    })),
+    divider: true
+  },
+  {
+    header: 'Speed',
+    options: measurementSpeed.map((opt) => ({
+      value: opt.abbr,
+      label: opt.name + ` (${opt.abbr})`
+    })),
+    divider: true
+  },
+  {
+    header: 'Frequency',
+    options: measurementFrequency.map((opt) => ({
+      value: opt.abbr,
+      label: opt.name + ` (${opt.abbr})`
+    })),
+    divider: true
+  },
+  {
+    header: 'Area',
+    options: measurementArea.map((opt) => ({
+      value: opt.abbr,
+      label: opt.name + ` (${opt.abbr})`
+    })),
+    divider: true
+  }
+]

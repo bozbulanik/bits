@@ -15,7 +15,8 @@ import {
   PenLine,
   RotateCcw,
   Search,
-  Space
+  Space,
+  X
 } from 'lucide-react'
 import KeyCompponent from '../../components/KeyComponent'
 import Button from '../../components/Button'
@@ -58,7 +59,6 @@ const SettingsShortcuts = () => {
   const [recordingAction, setRecordingAction] = useState<string | null>(null)
   const [currentInput, setCurrentInput] = useState<string>('')
   const startRecording = (action: string) => {
-    console.log('recording')
     setRecordingAction(action)
     setCurrentInput('')
   }
@@ -98,7 +98,7 @@ const SettingsShortcuts = () => {
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (shortcutRecorder.current && !shortcutRecorder.current.contains(e.target as Node)) {
-        setRecordingAction(null)
+        cancelRecording()
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -116,29 +116,34 @@ const SettingsShortcuts = () => {
             tabIndex={0}
             autoFocus
             onKeyDown={handleKeyDown}
-            className="focus:outline-none w-48 h-32 flex items-center justify-center absolute top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%] z-10 bg-bg dark:bg-bg-dark border border-border dark:border-border-dark rounded-md"
+            className="focus:outline-none w-64 h-48 flex flex-col gap-2 p-2 absolute top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%] z-10 bg-bg dark:bg-bg-dark border border-border dark:border-border-dark rounded-lg"
           >
+            <div className="flex items-center">
+              <p className="text-md font-semibold">{recordingAction}</p>
+              <Button variant={'iconGhost'} className="ml-auto" onClick={cancelRecording}>
+                <X size={16} strokeWidth={1.5} />
+              </Button>
+            </div>
             {currentInput ? (
-              <div className="w-full h-full flex flex-col items-center p-2">
-                <div className="flex items-center">
-                  {currentInput.split('+').map((key, idx) => (
-                    <div key={idx} className="px-0.5 content-center text-sm">
-                      {keyIconMap[key] || key}
-                    </div>
-                  ))}
+              <div className="w-full h-full flex flex-col gap-2">
+                <div className="w-full h-full bg-scry-bg dark:bg-scry-bg-dark rounded-md p-2 flex flex-col items-center justify-evenly">
+                  <div className="flex items-center gap-2">
+                    {currentInput.split('+').map((key, idx) => (
+                      <KeyCompponent key={idx}>{keyIconMap[key] || key}</KeyCompponent>
+                    ))}
+                  </div>
+                  <p className="text-xs text-text-muted">{currentInput}</p>
                 </div>
-                <p className="text-xs text-text-muted">{currentInput}</p>
                 <div className="flex gap-2 items-center mt-auto w-full">
-                  <Button onClick={saveShortcut} className="ml-auto" variant={'default'}>
-                    Save
-                  </Button>
-                  <Button onClick={cancelRecording} variant={'destructive'}>
-                    Cancel
+                  <Button onClick={saveShortcut} className="ml-auto w-full" variant={'default'}>
+                    Save Changes
                   </Button>
                 </div>
               </div>
             ) : (
-              <p className="text-sm">Please press keys.</p>
+              <div className="w-full h-full flex items-center justify-center">
+                <p className="text-sm">Type on your keyboard</p>
+              </div>
             )}
           </div>
         </>

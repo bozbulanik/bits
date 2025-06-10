@@ -910,3 +910,12 @@ export const languages = [
     nativeName: 'Saɯ cueŋƅ, Saw cuengh'
   }
 ]
+
+export const languageOptions = [
+  {
+    options: languages.map((opt) => ({
+      value: opt.name,
+      label: opt.name
+    }))
+  }
+]

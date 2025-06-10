@@ -56,9 +56,7 @@ const SettingsAppearance = () => {
             <div
               onClick={() => setSetting('theme.mode', 'light')}
               className={`p-1 w-48 h-32 rounded-md border ${
-                settings.theme.mode == 'light'
-                  ? 'border-button-border-dark'
-                  : 'dark:border-button-border-dark dark:hover:border-button-border'
+                settings.theme.mode == 'light' ? 'border-button-border-dark' : 'dark:border-button-border-dark dark:hover:border-button-border'
               }  cursor-pointer`}
             >
               <div className="hover:scale-102 transition-all duration-100 ease-in w-full h-full gap-2 flex flex-col bg-bg rounded-sm p-2">
@@ -83,9 +81,7 @@ const SettingsAppearance = () => {
             <div
               onClick={() => setSetting('theme.mode', 'dark')}
               className={`p-1 w-48 h-32 rounded-md border ${
-                settings.theme.mode == 'dark'
-                  ? 'border-button-border'
-                  : 'border-button-border hover:border-button-border-dark'
+                settings.theme.mode == 'dark' ? 'border-button-border' : 'border-button-border hover:border-button-border-dark'
               } cursor-pointer`}
             >
               <div className="hover:scale-102 transition-all duration-100 ease-in w-full h-full gap-2 flex flex-col bg-bg-dark rounded-sm p-2">

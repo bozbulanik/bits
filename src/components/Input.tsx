@@ -14,7 +14,11 @@ const inputVariants = cva('flex-1 w-full focus:outline-none bg-transparent disab
       xs: 'text-xs',
       sm: 'text-sm',
       md: 'text-md',
-      lg: 'text-lg'
+      lg: 'text-lg',
+      xl: 'text-xl',
+      '2xl': 'text-2xl',
+      '4xl': 'text-4xl',
+      '8xl': 'text-8xl'
     },
     fieldSizing: {
       fixed: 'field-sizing-fixed',
@@ -42,7 +46,11 @@ const wrapperVariants = cva('flex items-center rounded-md', {
       xs: 'text-xs',
       sm: 'text-sm',
       md: 'text-md',
-      lg: 'text-lg'
+      lg: 'text-lg',
+      xl: 'text-xl',
+      '2xl': 'text-2xl',
+      '4xl': 'text-4xl',
+      '8xl': 'text-8xl'
     }
   },
   defaultVariants: {

@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import CalendarAgendaPage from './CalendarAgendaPage'
 import CalendarLayout from '../../layouts/CalendarLayout'
+import CalendarDayPage from './CalendarDayPage'
 
 const CalendarRouter = () => {
   return (
@@ -8,8 +9,16 @@ const CalendarRouter = () => {
       <Route
         path="/agenda"
         element={
-          <CalendarLayout>
+          <CalendarLayout page="Agenda">
             <CalendarAgendaPage />
+          </CalendarLayout>
+        }
+      />
+      <Route
+        path="/day"
+        element={
+          <CalendarLayout page="Day">
+            <CalendarDayPage />
           </CalendarLayout>
         }
       />

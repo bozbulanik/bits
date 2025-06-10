@@ -26,7 +26,7 @@
   --radius-rounded: 16px;
 
   /* Standard Hover */
-  --color-bg-hover: #e9e9e9;
+  --color-bg-hover: #f0efef;
   --color-bg-hover-dark: #1d1d1d;
 
   /* Text */
@@ -44,11 +44,11 @@
   --color-text-success: #20571e;
   --color-text-success-dark: #5ece5a;
   /* Button */
-  --color-button-bg: #ececec;
-  --color-button-bg-dark: #181818;
+  --color-button-bg: #f7f6f6;
+  --color-button-bg-dark: #161616;
 
-  --color-button-bg-hover: #dfdddd;
-  --color-button-bg-hover-dark: #252525;
+  --color-button-bg-hover: #ececec;
+  --color-button-bg-hover-dark: #1a1a1a;
 
   --color-button-border: #dddddd;
   --color-button-border-dark: #303030;
@@ -69,11 +69,11 @@
   --color-button-border-error-hover-dark: #fb2c36;
 
   /* Input */
-  --color-input-bg: #ececec;
-  --color-input-bg-dark: #181818;
+  --color-input-bg: #f7f6f6;
+  --color-input-bg-dark: #161616;
 
-  --color-input-bg-hover: #dfdddd;
-  --color-input-bg-hover-dark: #252525;
+  --color-input-bg-hover: #ececec;
+  --color-input-bg-hover-dark: #1a1a1a;
 
   --color-input-border: #dddddd;
   --color-input-border-dark: #303030;

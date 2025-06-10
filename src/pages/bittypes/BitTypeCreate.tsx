@@ -8,7 +8,6 @@ import LucideIconList from '../../components/LucideIconList'
 import { BitTypePropertyDefinition, BitTypePropertyDefinitionType } from '../../types/Bit'
 import { useBitTypesStore } from '../../stores/bitTypesStore'
 import PropertyPage from './PropertyPage'
-import { format } from 'date-fns'
 
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -21,14 +20,12 @@ function PropertyItem({
   prop,
   setSelectedPropertyId,
   setView,
-  renderPropDV,
   handleDeleteProperty
 }: {
   id: string
   prop: BitTypePropertyDefinition
   setSelectedPropertyId: (id: string) => void
   setView: (view: string) => void
-  renderPropDV: (type: BitTypePropertyDefinitionType, value: any) => React.ReactNode
   handleDeleteProperty: (id: string) => void
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id })
@@ -64,10 +61,8 @@ function PropertyItem({
         >
           <div className="bg-bg-hover dark:bg-bg-hover-dark p-2 rounded-md">{getPropertyIcon(prop.type)}</div>
           <div className="flex flex-col flex-1">
-            <p className="text-sm">{prop.name}</p>
-            <p className="text-xs text-text-muted italic">{prop.required ? 'Required' : 'Not required'}</p>
+            <p className="text-xs text-text-muted italic">{prop.isTitle ? 'Set as title' : 'Not title'}</p>
           </div>
-          <div className="ml-auto">{renderPropDV(prop.type, prop.defaultValue)}</div>
         </div>
         <div className="ml-auto flex items-center justify-center h-6.5 w-6.5">
           {hovered ? (
@@ -139,94 +134,26 @@ const BitTypeCreate = () => {
     }
   }
 
-  const handleAddProperty = (name: string, type: BitTypePropertyDefinitionType, required: boolean, defaultValue: any, options: any) => {
+  const handleAddProperty = (name: string, type: BitTypePropertyDefinitionType, options: any, isTitle: boolean) => {
+    setBitTypePropertyWarning('')
     const newProperty: BitTypePropertyDefinition = {
       id: crypto.randomUUID(),
       name: name,
       type: type,
-      required: required,
-      defaultValue: defaultValue,
       options: options,
-      order: properties.length
+      order: properties.length,
+      isTitle
     }
     setProperties([...properties, newProperty])
   }
 
   const handleUpdateProperty = (updatedProperty: BitTypePropertyDefinition) => {
+    setBitTypePropertyWarning('')
     setProperties(properties.map((p) => (p.id === updatedProperty.id ? updatedProperty : p)))
   }
 
   const handleDeleteProperty = (id: string) => {
     setProperties(properties.filter((p) => p.id !== id))
-  }
-
-  function truncateText(text: string, maxLength: number): string {
-    if (!text) return ''
-    return text.length > maxLength ? text.slice(0, maxLength) + '…' : text
-  }
-  const renderPropDV = (type: BitTypePropertyDefinitionType, value: any) => {
-    switch (type) {
-      case 'bit':
-        return <p className="text-sm text-text-muted">{truncateText(value, 15)}</p>
-      case 'text':
-        return <p className="text-sm text-text-muted">{truncateText(value, 15)}</p>
-      case 'checkbox':
-        return <p className="text-sm text-text-muted">{value ? 'Checked' : 'Unchecked'}</p>
-      case 'currency':
-        return <p className="text-sm text-text-muted">{value}</p>
-      case 'date':
-        return <p className="text-sm text-text-muted">{format(value, 'MMM dd, yyyy')}</p>
-      case 'document':
-        return <p className="text-sm text-text-muted">{truncateText(value, 15)}</p>
-      case 'email':
-        return <p className="text-sm text-text-muted">{truncateText(value, 15)}</p>
-      case 'file':
-        return <p className="text-sm text-text-muted">{truncateText(value, 15)}</p>
-      case 'image':
-        return <p className="text-sm text-text-muted">{truncateText(value, 15)}</p>
-      case 'location':
-        return (
-          <p className="text-sm text-text-muted">
-            Lat {value[0].toFixed(2)} Lng {value[1].toFixed(2)}
-          </p>
-        )
-      case 'number':
-        return <p className="text-sm text-text-muted">{truncateText(value, 15)}</p>
-      case 'phone':
-        return <p className="text-sm text-text-muted">{truncateText(value, 15)}</p>
-      case 'select':
-        return <p className="text-sm text-text-muted">{truncateText(value, 15)}</p>
-      case 'multiselect':
-        return <p className="text-sm text-text-muted">{truncateText(value.length + ' default options', 15)}</p>
-      case 'url':
-        return <p className="text-sm text-text-muted">{truncateText(value, 15)}</p>
-      case 'audio':
-        return <p className="text-sm text-text-muted">{truncateText(value, 15)}</p>
-      case 'percentage':
-        return <p className="text-sm text-text-muted">{truncateText('%' + value, 15)}</p>
-      case 'color':
-        return <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: `${value}` }}></div>
-      case 'country':
-        return <p className="text-sm text-text-muted">{truncateText(value, 15)}</p>
-      case 'language':
-        return <p className="text-sm text-text-muted">{truncateText(value, 15)}</p>
-      case 'planguage':
-        return <p className="text-sm text-text-muted">{truncateText(value, 15)}</p>
-      case 'timezone':
-        return <p className="text-sm text-text-muted">{truncateText(value, 15)}</p>
-      case 'barcode':
-        return <p className="text-sm text-text-muted">{truncateText(value, 15)}</p>
-      case 'time':
-        return <p className="text-sm text-text-muted">{format(value, 'HH:mm')}</p>
-      case 'datetime':
-        return <p className="text-sm text-text-muted">{format(value, 'MMM dd, yyyy HH:mm')}</p>
-      case 'measurement':
-        return <p className="text-sm text-text-muted">{truncateText(value, 15)}</p>
-      case 'range':
-        return <p className="text-sm text-text-muted">{truncateText(value, 15)}</p>
-      case 'rating':
-        return <p className="text-sm text-text-muted">{truncateText(value, 15)}</p>
-    }
   }
 
   const IconComponent = getIconComponent(iconName)
@@ -296,7 +223,7 @@ const BitTypeCreate = () => {
             <div className="flex-1 h-full flex items-center drag-bar">
               <p className="ml-1 font-semibold text-lg">{name == '' ? 'Create Bit Type' : name + ' Type'}</p>
             </div>
-            <Button onClick={() => window.ipcRenderer.invoke('closeWindow', 'bittypes')} variant={'iconGhost'} className="ml-auto">
+            <Button onClick={() => window.ipcRenderer.send('closeWindow')} variant={'iconGhost'} className="ml-auto">
               <X size={16} strokeWidth={1.5} />
             </Button>
           </div>
@@ -363,7 +290,7 @@ const BitTypeCreate = () => {
               </div>
             </div>
 
-            <div className="p-2 flex flex-col gap-2 overflow-auto">
+            <div className="p-2 flex flex-col gap-2 overflow-auto flex-1">
               <div className="flex items-center">
                 <p className="text-text-muted font-semibold uppercase text-sm">Properties</p>
                 {bitTypePropertyWarning != '' && <p className="ml-auto text-sm text-red-600">{bitTypePropertyWarning}</p>}
@@ -372,7 +299,7 @@ const BitTypeCreate = () => {
                 <Plus size={16} strokeWidth={1.5} />
                 Add property
               </Button>
-              <div className="overflow-auto">
+              <div className="overflow-auto h-full">
                 {properties.length > 0 ? (
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToVerticalAxis]}>
                     <SortableContext items={properties.map((p) => p.id)} strategy={verticalListSortingStrategy}>
@@ -385,14 +312,16 @@ const BitTypeCreate = () => {
                             handleDeleteProperty={handleDeleteProperty}
                             setSelectedPropertyId={setSelectedPropertyId}
                             setView={setView}
-                            renderPropDV={renderPropDV}
                           />
                         ))}
                       </div>
                     </SortableContext>
                   </DndContext>
                 ) : (
-                  <p className="text-text-muted text-sm">No property yet</p>
+                  <div className="flex flex-col gap-1 items-center justify-center h-full">
+                    <p className="font-semibold">No property yet</p>
+                    <p className="text-text-muted text-sm">Add some property before creating the bit type</p>
+                  </div>
                 )}
               </div>
             </div>

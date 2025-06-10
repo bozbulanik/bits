@@ -36,6 +36,9 @@ export interface UserSettings {
     dailyCheckin: boolean
     updates: boolean
   }
+  bitCreator: {
+    defaultBitType: string
+  }
   //   ai: {
   //     suggestionsEnabled: boolean
   //     verbosity: 'low' | 'medium' | 'high'

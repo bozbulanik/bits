@@ -73,10 +73,7 @@ const SettingsProfile = () => {
               className="relative p-1 cursor-pointer h-26 w-26 border border-button-border dark:border-button-border-dark rounded-md bg-button-bg dark:bg-button-bg-dark hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark hover:border-button-border-hover dark:hover:border-button-border-hover-dark flex items-center justify-center text-text-muted"
             >
               {profileImagePath != '' ? (
-                <img
-                  className="w-full h-full rounded-lg p-0.5 object-cover"
-                  src={profileImagePath}
-                />
+                <img className="w-full h-full rounded-lg p-0.5 object-cover" src={profileImagePath} />
               ) : (
                 <User size={48} strokeWidth={1.5} />
               )}
@@ -92,19 +89,10 @@ const SettingsProfile = () => {
                     <div className="w-full h-full text-center flex flex-col gap-1 items-center justify-center">
                       <ImagePlus size={32} strokeWidth={1.5} />
                       <p className="text-sm">Click or drag-drop image here</p>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        ref={fileInputRef}
-                        className="hidden"
-                        onChange={handleFileChange}
-                      />
+                      <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
                     </div>
                   ) : (
-                    <div
-                      onClick={handleProfileImageRemoval}
-                      className="text-red-500 w-full h-full flex items-center justify-center"
-                    >
+                    <div onClick={handleProfileImageRemoval} className="text-red-500 w-full h-full flex items-center justify-center">
                       <Trash size={48} strokeWidth={1.5} />
                     </div>
                   )}
@@ -115,33 +103,15 @@ const SettingsProfile = () => {
           <div className="flex flex-col flex-1 gap-2">
             <div className="flex items-center">
               <p className="text-sm font-semibold">Name</p>
-              <Input
-                spellCheck={false}
-                value={name}
-                onChange={handleNameChange}
-                placeholder="John"
-                className="ml-auto"
-              />
+              <Input spellCheck={false} value={name} onChange={handleNameChange} placeholder="John" className="ml-auto" />
             </div>
             <div className="flex items-center">
               <p className="text-sm font-semibold">Last Name</p>
-              <Input
-                spellCheck={false}
-                value={surname}
-                onChange={handleSurnameChange}
-                placeholder="Smith"
-                className="ml-auto"
-              />
+              <Input spellCheck={false} value={surname} onChange={handleSurnameChange} placeholder="Smith" className="ml-auto" />
             </div>
             <div className="flex items-center">
               <p className="text-sm font-semibold">E-mail</p>
-              <Input
-                spellCheck={false}
-                value={email}
-                onChange={handleMailChange}
-                placeholder="example@mail.com"
-                className="ml-auto"
-              />
+              <Input spellCheck={false} value={email} onChange={handleMailChange} placeholder="example@mail.com" className="ml-auto" />
             </div>
           </div>
         </div>

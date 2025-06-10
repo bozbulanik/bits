@@ -3,35 +3,7 @@ import { ArrowDownAZ, ArrowDownUp, ArrowDownZA, Check, ChevronsUpDown } from 'lu
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 import Input from './Input'
-
-interface ToggleOption {
-  value: string
-  label?: string
-  icon?: React.ReactNode
-}
-
-interface ToggleButtonProps {
-  options: ToggleOption[]
-  value: string
-  onChange: (value: string) => void
-  className?: string
-  variant?: 'default' | 'icon' | 'ghost' | 'destructive' | 'tab' | 'selectedTab'
-}
-
-const ToggleButton: React.FC<ToggleButtonProps> = ({ options, value, onChange, className, variant }) => {
-  const currentIndex = options.findIndex((opt) => opt.value === value)
-  const current = options[currentIndex]
-
-  const handleClick = () => {
-    const nextIndex = (currentIndex + 1) % options.length
-    onChange(options[nextIndex].value)
-  }
-  return (
-    <Button className={className} variant={variant} onClick={handleClick}>
-      {current?.icon}
-    </Button>
-  )
-}
+import ToggleButton from './ToggleButton'
 
 // Returns the span with a matched text.
 function highlightMatch(label: string, query: string): React.ReactNode {
@@ -74,9 +46,23 @@ interface ComboboxProps {
   placeholder?: string
   multiSelect?: boolean
   ghost?: boolean
+  dropDirection?: 'down' | 'up'
+  maxH?: number
 }
 
-const Combobox: React.FC<ComboboxProps> = ({ selectedValues, options, label, searchable, className, onChange, placeholder, multiSelect, ghost }) => {
+const Combobox: React.FC<ComboboxProps> = ({
+  selectedValues,
+  options,
+  label,
+  searchable,
+  className,
+  onChange,
+  placeholder,
+  multiSelect,
+  ghost,
+  dropDirection = 'down',
+  maxH = 64
+}) => {
   const [focusedOption, setFocusedOption] = useState<ComboboxOption | null>()
   const [isItemListOpen, setItemListOpen] = useState<boolean>(false)
   const [optionSearch, setOptionSearch] = useState<string>('')
@@ -178,13 +164,21 @@ const Combobox: React.FC<ComboboxProps> = ({ selectedValues, options, label, sea
     e.stopPropagation()
     onChange(multiSelect ? [] : '')
   }
+
   const sortOptions = [
     { value: 'alphaAZ', icon: <ArrowDownAZ size={16} strokeWidth={1.5} /> },
     { value: 'alphaZA', icon: <ArrowDownZA size={16} strokeWidth={1.5} /> },
     { value: 'default', icon: <ArrowDownUp size={16} strokeWidth={1.5} /> }
   ]
+
+  // Determine positioning and animation values based on drop direction
+  const positionClass = dropDirection === 'up' ? 'bottom-9' : 'top-9'
+  const initialY = dropDirection === 'up' ? 10 : -10
+  const animateY = 0
+  const exitY = dropDirection === 'up' ? 10 : -10
+
   return (
-    <div className={`relative inline-block ${className}`}>
+    <div className={`relative inline-block ${className} `}>
       <Button
         onWheel={handleButtonScroll}
         ref={buttonRef}
@@ -193,15 +187,15 @@ const Combobox: React.FC<ComboboxProps> = ({ selectedValues, options, label, sea
         onClick={() => setItemListOpen((prev) => !prev)}
       >
         {selectedOptions.length === 0 ? (
-          <div>
+          <div className="truncate">
             <span className="text-text-muted">{placeholder}</span>
           </div>
         ) : multiSelect ? (
-          <div>
+          <div className="truncate">
             <p>Selected ({selectedOptions.length})</p>
           </div>
         ) : (
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center truncate">
             {selectedOptions[0]?.icon && selectedOptions[0].icon}
             <span>{selectedOptions[0]?.label}</span>
           </div>
@@ -218,11 +212,11 @@ const Combobox: React.FC<ComboboxProps> = ({ selectedValues, options, label, sea
         {isItemListOpen && (
           <motion.div
             ref={menuRef}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: initialY }}
+            animate={{ opacity: 1, y: animateY }}
+            exit={{ opacity: 0, y: exitY }}
             transition={{ duration: 0.2 }}
-            className="absolute top-9 z-50 w-full bg-scry-bg dark:bg-scry-bg-dark border border-border dark:border-border-dark rounded-md"
+            className={`absolute ${positionClass} z-50 w-full bg-scry-bg dark:bg-scry-bg-dark border border-border dark:border-border-dark rounded-md`}
           >
             {searchable && (
               <div className="border-b border-border dark:border-border-dark flex items-center">
@@ -253,15 +247,12 @@ const Combobox: React.FC<ComboboxProps> = ({ selectedValues, options, label, sea
                 </div>
               </div>
             )}
-            <div className="flex flex-col overflow-auto max-h-64 p-1">
+            <div className={`flex flex-col overflow-auto max-h-${maxH} p-1`}>
               {filteredGroup.length === 0 ? (
                 <div className="text-sm text-text-muted">No options found</div>
               ) : (
                 filteredGroup?.map((optionGroup, index) => (
-                  <div
-                    key={optionGroup.header || index}
-                    className={`py-2 ${optionGroup.divider ? 'border-b border-border dark:border-border-dark' : ''}`}
-                  >
+                  <div key={optionGroup.header || index} className={`${optionGroup.divider ? 'border-b border-border dark:border-border-dark' : ''}`}>
                     <p className="font-bold uppercase text-xs text-text-muted2">{optionGroup.header}</p>
                     {optionGroup.options.map((option) => (
                       <div

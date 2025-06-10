@@ -8,39 +8,31 @@ import { useSettingsStore } from './stores/settingsStore'
 import { PulseLoader } from 'react-spinners'
 import ConfigurationWizard from './pages/configuration/ConfigurationWizard'
 import { useBitTypesStore } from './stores/bitTypesStore'
-import { useBitsStore } from './stores/bitsStore'
 import Button from './components/Button'
 import { MessageCircleQuestion } from 'lucide-react'
 import ConfigurationInitial from './pages/configuration/ConfigurationInitial'
 import SettingsRouter from './pages/settings/SettingsRouter'
 import { useShortcutsStore } from './stores/shortcutsStore'
-import BitViewer from './pages/BitViewer'
+import BitViewer from './pages/bits/BitViewer'
 import CalendarRouter from './pages/calendar/CalendarRouter'
 import BitTypes from './pages/bittypes/BitTypes'
 import BitTypeCreate from './pages/bittypes/BitTypeCreate'
 import BitTypeEdit from './pages/bittypes/BitTypeEdit'
 import AnalyticsPage from './pages/AnalyticsPage'
 import AdvancedSearchPage from './pages/AdvancedSearchPage'
-import { useCollectionsStore } from './stores/collectionsStore'
-import Collections from './pages/collections/Collections'
-import CollectionCreate from './pages/collections/CollectionCreate'
-import CollectionView from './pages/collections/CollectionView'
 import TestingPage from './pages/TestingPage'
-import SearchPageOld from './pages/SearchPageOld'
+import FastCreate from './pages/bits/FastCreate'
+import AIPage from './pages/ai/AIPage'
+import AIChats from './pages/ai/AIChats'
 
 function App() {
-  const { isLoading: bitsLoading, loadError: bitsError } = useBitsStore()
   const { isLoading: typesLoading, loadError: typesError } = useBitTypesStore()
-  const { isLoading: collectionsLoading, loadError: collectionsError } = useCollectionsStore()
-
   const { settings, initialized, loadSettings } = useSettingsStore()
   const { isLoading, error: shortcutsError, shortcuts, fetchShortcuts } = useShortcutsStore()
   useEffect(() => {
     const fetchData = async () => {
       try {
         await useBitTypesStore.getState().loadBitTypes()
-        await useBitsStore.getState().loadBits()
-        await useCollectionsStore.getState().loadCollections()
       } catch (error) {
         console.error('Error loading data:', error)
       }
@@ -64,7 +56,7 @@ function App() {
     fetchShortcuts()
   }, [fetchShortcuts])
 
-  if (bitsLoading || typesLoading || collectionsLoading) {
+  if (typesLoading) {
     return (
       <RootLayout>
         <div className="w-full h-full flex flex-col gap-4 items-center justify-center">
@@ -74,12 +66,12 @@ function App() {
       </RootLayout>
     )
   }
-  if (bitsError || typesError || collectionsError) {
+  if (typesError) {
     return (
       <RootLayout>
         <div className="w-full h-full flex flex-col gap-2 items-center justify-center">
           <p className="text-md text-red-500">500 Internal Server Error</p>
-          <p className="text-text-muted">{(bitsError || typesError)?.message}</p>
+          <p className="text-text-muted">{typesError?.message}</p>
           <Button variant={'default'}>
             <a href="https://github.com/bozbulanik/bits/issues/new/choose" target="_blank" className="flex gap-2 items-center w-full h-full">
               <MessageCircleQuestion size={16} strokeWidth={1.5} />
@@ -162,7 +154,15 @@ function App() {
           }
         />
         <Route
-          path="/bitviewer/:id"
+          path="/fastcreate/:bitTypeId?"
+          element={
+            <RootLayout>
+              <FastCreate />
+            </RootLayout>
+          }
+        />
+        <Route
+          path="/bits/view-bit/:bitId"
           element={
             <RootLayout>
               <BitViewer />
@@ -190,31 +190,6 @@ function App() {
           element={
             <RootLayout>
               <BitTypeEdit />
-            </RootLayout>
-          }
-        />
-
-        <Route
-          path="/collections"
-          element={
-            <RootLayout>
-              <Collections />
-            </RootLayout>
-          }
-        />
-        <Route
-          path="/collections/create-collection"
-          element={
-            <RootLayout>
-              <CollectionCreate />
-            </RootLayout>
-          }
-        />
-        <Route
-          path="/collections/view-collection/:collectionId"
-          element={
-            <RootLayout>
-              <CollectionView />
             </RootLayout>
           }
         />
@@ -247,6 +222,22 @@ function App() {
           element={
             <RootLayout>
               <AnalyticsPage />
+            </RootLayout>
+          }
+        />
+        <Route
+          path="/ai/:chatId?"
+          element={
+            <RootLayout>
+              <AIPage />
+            </RootLayout>
+          }
+        />
+        <Route
+          path="/ai/chats"
+          element={
+            <RootLayout>
+              <AIChats />
             </RootLayout>
           }
         />

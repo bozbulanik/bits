@@ -15,7 +15,7 @@ const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children, currentPage }
         <div className="flex-1 h-full flex items-center drag-bar">
           <p className="ml-1 font-semibold text-lg">Settings</p>
         </div>
-        <Button onClick={() => window.ipcRenderer.invoke('closeWindow', 'settings')} variant={'icon'} className="ml-auto">
+        <Button onClick={() => window.ipcRenderer.send('closeWindow')} variant={'iconGhost'} className="ml-auto">
           <X size={16} strokeWidth={1.5} />
         </Button>
       </div>

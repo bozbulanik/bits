@@ -1,31 +1,31 @@
 import React from 'react'
 import Button from '../components/Button'
 import DateTime from '../components/DateTime'
-import { X } from 'lucide-react'
+import { MoreHorizontal, X } from 'lucide-react'
+import SegmentedControl from '../components/SegmentedControl'
+import { useNavigate } from 'react-router-dom'
 
 interface CalendarLayoutProps {
   children: React.ReactNode
+  page: string
 }
-const CalendarLayout: React.FC<CalendarLayoutProps> = ({ children }) => {
+const CalendarLayout: React.FC<CalendarLayoutProps> = ({ children, page }) => {
   return (
     <div className="w-full h-full flex flex-col">
-      <div className="h-12 flex items-center p-2">
-        <div className="w-full h-full flex items-center drag-bar">
-          <p className="ml-1 font-semibold">Calendar</p>
-          <p className="mr-1 ml-auto">
-            <DateTime />
-          </p>
+      <div className=" flex items-center p-2 gap-2">
+        <div className="flex-1 h-full flex items-center drag-bar">
+          <p className="ml-1 font-semibold text-lg">Calendar - {page}</p>
         </div>
-        <Button
-          onClick={() => window.ipcRenderer.invoke('closeWindow', 'calendar')}
-          variant={'icon'}
-          className="ml-auto"
-        >
+
+        <Button onClick={() => window.ipcRenderer.send('closeWindow')} variant={'iconGhost'} className="ml-auto">
+          <MoreHorizontal size={16} strokeWidth={1.5} />
+        </Button>
+        <Button onClick={() => window.ipcRenderer.send('closeWindow')} variant={'iconGhost'} className="ml-auto">
           <X size={16} strokeWidth={1.5} />
         </Button>
       </div>
+      <div className="flex items-center justify-center"></div>
       {children}
-      <div className="p-2 h-12 mt-auto border-t border-border dark:border-border-dark"></div>
     </div>
   )
 }

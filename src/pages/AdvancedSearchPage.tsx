@@ -16,11 +16,11 @@ const AdvancedSearchPage = () => {
   return (
     <div className="w-full h-full flex flex-col">
       <div className="h-12 p-2 flex gap-2 items-center">
-        <p className="font-semibold">Advanced Search</p>
+        <p className="font-semibold text-lg ml-1">Advanced Search</p>
         {/* <Input autoFocus leftSection={<Search size={16} strokeWidth={1.5} />} inputSize={'md'} placeholder="Search..." variant={'ghost'} /> */}
         <div className="drag-bar h-full flex-1">&nbsp;</div>
 
-        <Button className="ml-auto" variant={'icon'} onClick={() => window.ipcRenderer.invoke('closeWindow', 'advancedsearch')}>
+        <Button className="ml-auto" variant={'icon'} onClick={() => window.ipcRenderer.send('closeWindow')}>
           <X size={16} strokeWidth={1.5} />
         </Button>
       </div>

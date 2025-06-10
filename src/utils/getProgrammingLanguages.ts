@@ -705,3 +705,12 @@ export const programmingLanguages = [
   'ZOPL',
   'ZPL'
 ]
+
+export const programmingLanguageOptions = [
+  {
+    options: programmingLanguages.map((opt) => ({
+      value: opt,
+      label: opt
+    }))
+  }
+]

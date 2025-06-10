@@ -97,9 +97,7 @@ const DateInput: React.FC<DateInputProps> = ({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}
-          className={`${
-            selectedDateFrom && ranged ? 'min-w-148' : 'min-w-75'
-          } fixed p-2 z-100 bg-bg dark:bg-bg-dark border border-border dark:border-border-dark rounded-md`}
+          className={`${selectedDateFrom && ranged ? 'min-w-200' : 'min-w-100'} fixed z-100 flex gap-1`}
           style={{
             top: panelPosition.top + 8,
             left: horizontalAlign === 'left' ? panelPosition.left : undefined,
@@ -107,7 +105,55 @@ const DateInput: React.FC<DateInputProps> = ({
             width: panelPosition.width
           }}
         >
-          <div className="flex gap-2 items-center">
+          <div className="w-32 p-1 rounded-md bg-bg dark:bg-bg-dark border border-border dark:border-border-dark transition-all duration-300 ease-in-out">
+            {ranged && selectedDateFrom != null ? (
+              <div className="w-full h-full flex flex-col gap-2 items-center justify-evenly">
+                <Button className="w-full" variant={'ghost'}>
+                  Last 3 months
+                </Button>
+                <Button className="w-full" variant={'ghost'}>
+                  Last month
+                </Button>
+                <Button className="w-full" variant={'ghost'}>
+                  Last 7 days
+                </Button>
+                <Button className="w-full" variant={'ghost'}>
+                  Next 7 days
+                </Button>
+                <Button className="w-full" variant={'ghost'}>
+                  Next month
+                </Button>
+                <Button className="w-full" variant={'ghost'}>
+                  Next 3 months
+                </Button>
+              </div>
+            ) : (
+              <div className="w-full h-full flex flex-col gap-2 items-center justify-evenly">
+                <Button className="w-full" variant={'ghost'}>
+                  Last month
+                </Button>
+                <Button className="w-full" variant={'ghost'}>
+                  Last week
+                </Button>
+                <Button className="w-full" variant={'ghost'}>
+                  Yesterday
+                </Button>
+                <Button className="w-full" variant={'ghost'}>
+                  Today
+                </Button>
+                <Button className="w-full" variant={'ghost'}>
+                  Tomorrow
+                </Button>
+                <Button className="w-full" variant={'ghost'}>
+                  Next week
+                </Button>
+                <Button className="w-full" variant={'ghost'}>
+                  Next month
+                </Button>
+              </div>
+            )}
+          </div>
+          <div className="flex gap-1 items-center">
             <RangeSelectorComponent
               initialDate={selectedDateFrom as Date}
               onDateChange={handleFromDateChange}

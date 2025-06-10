@@ -30,9 +30,9 @@ const DateTime = () => {
     day: 'numeric'
   })
   return (
-    <div className="text-sm p-2">
+    <p className="text-sm">
       {currentDate} {currentTime}
-    </div>
+    </p>
   )
 }
 export default DateTime

@@ -1,15 +1,6 @@
 import { useBitsStore } from '../stores/bitsStore'
 import { useBitTypesStore } from '../stores/bitTypesStore'
-import {
-  Bit,
-  BitData,
-  BitTypeDefinition,
-  BitTypePropertyDefinition,
-  BitTypePropertyDefinitionType,
-  Collection,
-  CollectionItem,
-  Note
-} from '../types/Bit'
+import { Bit, BitData, BitTypeDefinition, BitTypePropertyDefinition, BitTypePropertyDefinitionType, Note } from '../types/Bit'
 import { format, formatDistanceToNow } from 'date-fns'
 
 import { Pin, PinOff, Plus, X, Moon, Sun } from 'lucide-react'
@@ -21,7 +12,6 @@ import { useSettingsStore } from '../stores/settingsStore'
 import NumberInput from '../components/NumberInput'
 import Checkbox from '../components/Checkbox'
 import CalendarInput from '../components/DateInput'
-import { useCollectionsStore } from '../stores/collectionsStore'
 import TimeInput from '../components/TimeInput'
 import { getPropertyIcon } from '../utils/getIcon'
 
@@ -82,7 +72,7 @@ interface BitCardProps {
 }
 
 const BitCard: React.FC<BitCardProps> = ({ bit, index }) => {
-  const { deleteBit, updateBit, addBitNote, togglePin } = useBitsStore()
+  const { deleteBit, addBitNote, togglePin } = useBitsStore()
 
   function renderValueByType(type: BitTypePropertyDefinitionType, value: any) {
     switch (type) {
@@ -159,7 +149,7 @@ const BitCard: React.FC<BitCardProps> = ({ bit, index }) => {
   }
 
   const handlePinning = (bit: Bit) => {
-    togglePin(bit.id)
+    togglePin(bit.id, bit.pinned ? 0 : 1)
   }
 
   const [newNoteString, setNewNoteString] = useState<string>('')
@@ -204,101 +194,10 @@ const BitCard: React.FC<BitCardProps> = ({ bit, index }) => {
   )
 }
 
-interface CollectionItemComponentProps {
-  collection: Collection
-}
-
-const CollectionItemComponent: React.FC<CollectionItemComponentProps> = ({ collection }) => {
-  function getIconComponent(name: string): FC<{ size?: number; strokeWidth?: number }> {
-    const Icon = Icons[name as keyof typeof Icons] as FC<{ size?: number; strokeWidth?: number }>
-    return Icon
-  }
-  const getTextValue = (bit: Bit) => {
-    if (!bit) return null
-    // If it includes a text property render that otherwise render untitled
-    const textProperty = bit.type.properties.find((property) => property.type === 'text')
-    if (!textProperty) return null
-    const bitData = bit.data.find((data) => data.propertyId === textProperty.id)
-    if (!bitData) return null
-    return <p className="text-sm">{bitData.value}</p>
-  }
-  const { bits, getBitById } = useBitsStore()
-  const { deleteCollection, updateCollection } = useCollectionsStore()
-  const [selectedBit, setSelectedBit] = useState<Bit>()
-
-  const onBitSelect = (e: any) => {
-    const bit = bits.find((bit: Bit) => bit.id === e.target.value)
-    setSelectedBit(bit)
-  }
-  const [currentCollectionItems, setCurrentCollectionItems] = useState<CollectionItem[]>([])
-
-  const handleAddBit = () => {
-    if (!selectedBit) return
-    const length = currentCollectionItems.length
-    const newCollectionItem: CollectionItem = {
-      id: crypto.randomUUID(),
-      bitId: selectedBit.id,
-      orderIndex: length
-    }
-    setCurrentCollectionItems((prev) => [...prev, newCollectionItem])
-  }
-  const updateTheCollection = () => {
-    updateCollection(collection.id, collection.name, collection.iconName, collection.createdAt, new Date().toISOString(), currentCollectionItems)
-    setCurrentCollectionItems([])
-  }
-
-  return (
-    <div className="border border-border dark:border-border-dark rounded-md p-2 bg-scry-bg dark:bg-scry-bg-dark flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        {(() => {
-          const Icon = getIconComponent(collection.iconName)
-          return Icon ? <Icon size={16} strokeWidth={1.5} /> : null
-        })()}
-        <p>{collection.name}</p>
-        <Button onClick={() => deleteCollection(collection.id)} variant={'icon'} className="ml-auto">
-          <Icons.Trash size={16} strokeWidth={1.5} />
-        </Button>
-      </div>
-      <div className="text-sm flex gap-2 justify-between">
-        <p>{format(new Date(collection.createdAt), 'EE, MMM d hh:mm')}</p>
-        <p>{format(new Date(collection.updatedAt), 'EE, MMM d hh:mm')}</p>
-      </div>
-      <div className="p-2 border border-border dark:border-border-dark rounded-md">
-        {collection.items.map((item) => {
-          const bit = getBitById(item.bitId)
-          if (!bit) return
-          return (
-            <div className="flex gap-2 items-center">
-              {(() => {
-                const Icon = getIconComponent(bit?.type.iconName)
-                return Icon ? <Icon size={16} strokeWidth={1.5} /> : null
-              })()}
-              <p className="truncate">{bit?.id}</p>
-            </div>
-          )
-        })}
-      </div>
-      <div className="flex gap-2">
-        <select value={selectedBit?.id} onChange={onBitSelect}>
-          {bits.map((bit, index) => {
-            return (
-              <option key={index} value={bit.id}>
-                {getTextValue(bit)}
-              </option>
-            )
-          })}
-        </select>
-        <Button onClick={handleAddBit}>Add bit</Button>
-      </div>
-      <Button onClick={updateTheCollection}>Update collection</Button>
-    </div>
-  )
-}
-
 const TestingPage = () => {
   const { settings, setSetting } = useSettingsStore()
   const { bitTypes, addBitType, deleteBitType } = useBitTypesStore()
-  const { bits, addBit } = useBitsStore()
+  const { addBit } = useBitsStore()
 
   function getIconComponent(name: string): FC<{ size?: number; strokeWidth?: number }> {
     const Icon = Icons[name as keyof typeof Icons] as FC<{ size?: number; strokeWidth?: number }>
@@ -357,7 +256,8 @@ const TestingPage = () => {
       const newItem: BitData = {
         bitId: crypto.randomUUID(),
         propertyId: prop.id,
-        value
+        value,
+        isTitle: false
       }
 
       if (existingItemIndex >= 0) {
@@ -403,9 +303,8 @@ const TestingPage = () => {
             ghost
             className="w-full"
             placeholder={format(prop.defaultValue as string, 'dd MM yyyy') as string}
-            setCurrentDisplayDate={(e) => handleDataValueChange(prop, e)}
+            setCurrentDisplayDate={(e) => handleDataValueChange(prop, e.toISOString())}
             horizontalAlign="right"
-            ranged
           />
         )
       case 'file' as BitTypePropertyDefinitionType:
@@ -460,31 +359,13 @@ const TestingPage = () => {
     }
   }
 
-  const { collections, addCollection } = useCollectionsStore()
-  const [collectionName, setCollectionName] = useState<string>('')
-  const [collectionIconName, setCollectionIconName] = useState<string>('')
-  const handleAddCollection = () => {
-    addCollection(collectionName, collectionIconName, [])
-    setCollectionName('')
-    setCollectionIconName('')
-  }
-
   return (
     <div className="w-full h-full flex gap-2">
       <div className="p-2 flex flex-col gap-2">
         <Button variant={'icon'} onClick={() => setSetting('theme.mode', settings.theme.mode == 'light' ? 'dark' : 'light')}>
           {settings.theme.mode == 'light' ? <Moon size={16} strokeWidth={1.5} /> : <Sun size={16} strokeWidth={1.5} />}
         </Button>
-        <div className="flex p-2 flex-col gap-2 ">
-          <div className="flex flex-col gap-2">
-            <Input value={collectionName} onChange={(e) => setCollectionName(e.target.value)} placeholder="Collection name" />
-            <Input value={collectionIconName} onChange={(e) => setCollectionIconName(e.target.value)} placeholder="Collection icon name" />
-            <Button onClick={handleAddCollection}>Add collection</Button>
-          </div>
-          {collections.map((collection) => (
-            <CollectionItemComponent collection={collection} />
-          ))}
-        </div>
+
         <div>
           <TimeInput twelveHours={false} includeSeconds={false} placeholder="Set time" horizontalAlign="left" setCurrentDisplayTime={() => {}} />
         </div>
@@ -512,7 +393,11 @@ const TestingPage = () => {
                   <div className="w-36 flex items-center p-1 border-r border-border dark:border-border-dark  dark:border-border dark:border-border-dark -dark px-4">
                     <p>{prop.name}</p>
                   </div>
-                  <div className="p-1 flex items-center"> {renderLogPropertyInputs(prop)}</div>
+                  <div className="p-1 flex items-center">
+                    {' '}
+                    {renderLogPropertyInputs(prop)} <Checkbox className="p-1" checked={false} onChange={() => {}} />{' '}
+                    <p className="text-sm">Is title?</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -525,7 +410,7 @@ const TestingPage = () => {
             </div>
           </div>
         </div>
-        <div className="flex flex-col gap-2 overflow-auto">{bits && bits.map((bit, index) => <BitCard bit={bit} index={index} />)}</div>
+        {/* <div className="flex flex-col gap-2 overflow-auto">{bits && bits.map((bit, index) => <BitCard bit={bit} index={index} />)}</div> */}
       </div>
       <div className="overflow-auto flex flex-col p-2 gap-2 flex-1">
         <div className="flex flex-col gap-2 p-2">
@@ -569,7 +454,7 @@ const TestingPage = () => {
           </div>
         </div>
       </div>
-      <div className="flex flex-col gap-2 overflow-auto">
+      <div className="flex flex-col gap-2 overflow-auto w-64">
         {bitTypes.map((bitType, index) => (
           <div
             key={index}

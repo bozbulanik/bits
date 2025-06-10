@@ -12,7 +12,7 @@ const buttonVariants = cva('focus:outline-none cursor-pointer rounded-md flex ga
 
       icon: 'w-6.5 h-6.5 bg-button-bg dark:bg-button-bg-dark border border-button-border dark:border-button-border-dark hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark hover:border-button-border-hover dark:hover:border-button-border-hover-dark',
 
-      ghost: 'p-1.5 h-7 bg-transparent hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark',
+      ghost: 'p-1.5 h-7 bg-transparent hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark ',
       iconGhost: 'w-6.5 h-6.5 bg-transparent hover:bg-button-bg-hover dark:hover:bg-button-bg-hover-dark',
 
       destructive:

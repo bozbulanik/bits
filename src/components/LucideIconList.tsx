@@ -176,13 +176,7 @@ const LucideIconList: React.FC<IconPickerProps> = ({
         >
           <div className="sticky top-0 p-1 border-b border-border dark:border-border-dark">
             <div className="relative flex items-center gap-2">
-              <Input
-                autoFocus
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search icons..."
-                variant={'ghost'}
-              />
+              <Input autoFocus value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search icons..." variant={'ghost'} />
             </div>
           </div>
 
@@ -191,9 +185,7 @@ const LucideIconList: React.FC<IconPickerProps> = ({
             <div className="grid grid-cols-4 gap-2 w-full">
               {visibleIcons.length > 0 ? (
                 visibleIcons.map((iconName) => {
-                  const IconComponent = LucideIcons[
-                    iconName as keyof typeof LucideIcons
-                  ] as React.FC<{ size?: number; strokeWidth?: number }>
+                  const IconComponent = LucideIcons[iconName as keyof typeof LucideIcons] as React.FC<{ size?: number; strokeWidth?: number }>
                   const displayName = formatIconName(iconName)
                   return (
                     <Tooltip content={displayName} mode="cursor" className="p-1">
@@ -213,9 +205,7 @@ const LucideIconList: React.FC<IconPickerProps> = ({
                   )
                 })
               ) : (
-                <div className="col-span-4 p-4 text-center text-text-muted">
-                  No icons found {searchTerm ? `for "${searchTerm}"` : ''}
-                </div>
+                <div className="col-span-4 p-4 text-center text-text-muted">No icons found {searchTerm ? `for "${searchTerm}"` : ''}</div>
               )}
             </div>
           </div>
@@ -228,11 +218,7 @@ const LucideIconList: React.FC<IconPickerProps> = ({
           </div>
           {totalPages > 1 && (
             <div className="flex items-center justify-between p-2">
-              <Button
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                variant={'icon'}
-              >
+              <Button onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} variant={'icon'}>
                 <ChevronLeft size={16} strokeWidth={1.5} />
               </Button>
 
@@ -240,11 +226,7 @@ const LucideIconList: React.FC<IconPickerProps> = ({
                 Page {currentPage} of {totalPages}
               </p>
 
-              <Button
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                variant={'icon'}
-              >
+              <Button onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} variant={'icon'}>
                 <ChevronRight size={16} strokeWidth={1.5} />
               </Button>
             </div>

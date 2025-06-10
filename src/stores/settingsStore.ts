@@ -67,6 +67,9 @@ export const useSettingsStore = create<SettingsStore>((set) => {
         reminders: true,
         dailyCheckin: false,
         updates: true
+      },
+      bitCreator: {
+        defaultBitType: '98d99795-4d2d-4a4e-bf79-a2604ddf4348'
       }
     },
     initialized: false,
